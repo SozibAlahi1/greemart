@@ -78,7 +78,9 @@ export async function searchProducts(query: string): Promise<Product[]> {
     orderBy: { id: 'asc' }
   });
   
-  const products = allProducts.filter(product =>
+  type AllProductType = typeof allProducts[0];
+  
+  const products = allProducts.filter((product: AllProductType) =>
     product.name.toLowerCase().includes(lowerQuery) ||
     product.description.toLowerCase().includes(lowerQuery)
   );
