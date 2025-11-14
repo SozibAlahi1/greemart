@@ -196,11 +196,12 @@ async function main() {
 
   // Get product IDs for reviews
   const allProducts = await prisma.product.findMany();
-  const appleProduct = allProducts.find(p => p.name === 'Fresh Organic Apples');
-  const milkProduct = allProducts.find(p => p.name === 'Whole Milk');
-  const salmonProduct = allProducts.find(p => p.name === 'Fresh Salmon Fillet');
-  const breadProduct = allProducts.find(p => p.name === 'Artisan Bread');
-  const juiceProduct = allProducts.find(p => p.name === 'Orange Juice');
+  type ProductType = typeof allProducts[0];
+  const appleProduct = allProducts.find((p: ProductType) => p.name === 'Fresh Organic Apples');
+  const milkProduct = allProducts.find((p: ProductType) => p.name === 'Whole Milk');
+  const salmonProduct = allProducts.find((p: ProductType) => p.name === 'Fresh Salmon Fillet');
+  const breadProduct = allProducts.find((p: ProductType) => p.name === 'Artisan Bread');
+  const juiceProduct = allProducts.find((p: ProductType) => p.name === 'Orange Juice');
 
   // Create reviews
   if (appleProduct) {
