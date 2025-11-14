@@ -19,7 +19,8 @@ export async function getCategories(): Promise<string[]> {
     orderBy: { name: 'asc' },
     select: { name: true }
   });
-  return ['All', ...categories.map(c => c.name)];
+  type CategoryType = typeof categories[0];
+  return ['All', ...categories.map((c: CategoryType) => c.name)];
 }
 
 // For backward compatibility, export a function that returns categories
@@ -35,7 +36,9 @@ export async function getProducts(category?: string): Promise<Product[]> {
     orderBy: { id: 'asc' }
   });
   
-  return products.map(p => ({
+  type ProductType = typeof products[0];
+  
+  return products.map((p: ProductType) => ({
     id: p.id,
     name: p.name,
     description: p.description,
@@ -80,7 +83,9 @@ export async function searchProducts(query: string): Promise<Product[]> {
     product.description.toLowerCase().includes(lowerQuery)
   );
   
-  return products.map(p => ({
+  type ProductType = typeof products[0];
+  
+  return products.map((p: ProductType) => ({
     id: p.id,
     name: p.name,
     description: p.description,
