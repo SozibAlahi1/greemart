@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { OrderItem } from '@prisma/client';
 
 // GET /api/admin/orders/[id]
 export async function GET(
@@ -27,6 +26,8 @@ export async function GET(
       { status: 404 }
     );
   }
+
+  type OrderItem = typeof order.items[0];
 
   const formattedOrder = {
     orderId: order.orderId,
@@ -95,12 +96,14 @@ export async function PATCH(
       }
     });
 
+    type UpdatedOrderItem = typeof updated.items[0];
+
     const formattedOrder = {
       orderId: updated.orderId,
       customerName: updated.customerName,
       phone: updated.phone,
       address: updated.address,
-      items: updated.items.map((item: OrderItem) => ({
+      items: updated.items.map((item: UpdatedOrderItem) => ({
         productId: item.productId,
         quantity: item.quantity,
         name: item.name,
