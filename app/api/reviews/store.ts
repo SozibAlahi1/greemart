@@ -17,7 +17,9 @@ export async function getReviews(productId: number): Promise<Review[]> {
     orderBy: { createdAt: 'desc' }
   });
 
-  return reviews.map(review => ({
+  type ReviewType = typeof reviews[0];
+
+  return reviews.map((review: ReviewType) => ({
     id: review.id,
     productId: review.productId,
     userName: review.userName,
@@ -58,6 +60,8 @@ export async function getAverageRating(productId: number): Promise<number> {
   });
 
   if (reviews.length === 0) return 0;
-  const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+  
+  type ReviewType = typeof reviews[0];
+  const sum = reviews.reduce((acc, review: ReviewType) => acc + review.rating, 0);
   return sum / reviews.length;
 }
