@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { OrderItem } from '@prisma/client';
 
 // GET /api/admin/orders/[id]
 export async function GET(
@@ -32,7 +33,7 @@ export async function GET(
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map(item => ({
+    items: order.items.map((item: OrderItem) => ({
       productId: item.productId,
       quantity: item.quantity,
       name: item.name,
@@ -99,7 +100,7 @@ export async function PATCH(
       customerName: updated.customerName,
       phone: updated.phone,
       address: updated.address,
-      items: updated.items.map(item => ({
+      items: updated.items.map((item: OrderItem) => ({
         productId: item.productId,
         quantity: item.quantity,
         name: item.name,
@@ -123,5 +124,6 @@ export async function PATCH(
     );
   }
 }
+
 
 
