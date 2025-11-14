@@ -62,6 +62,6 @@ export async function getAverageRating(productId: number): Promise<number> {
   if (reviews.length === 0) return 0;
   
   type ReviewType = typeof reviews[0];
-  const sum = reviews.reduce((acc, review: ReviewType) => acc + review.rating, 0);
+  const sum = reviews.reduce((acc: number, review: ReviewType) => acc + review.rating, 0);
   return sum / reviews.length;
 }
