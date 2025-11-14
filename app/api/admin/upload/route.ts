@@ -3,6 +3,15 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 
+// GET /api/admin/upload - Return method not allowed message
+export async function GET() {
+  return NextResponse.json(
+    { error: 'Method not allowed. Use POST to upload files.' },
+    { status: 405 }
+  );
+}
+
+// POST /api/admin/upload
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
