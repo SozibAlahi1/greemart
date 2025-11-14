@@ -133,19 +133,7 @@ export async function DELETE(
       );
     }
 
-    // Check if any products are using this category
-    const productsCount = await prisma.product.count({
-      where: {
-        category: {
-          in: await prisma.category.findUnique({
-            where: { id: categoryId },
-            select: { name: true }
-          }).then(c => c ? [c.name] : [])
-        }
-      }
-    });
-
-    // Actually, let's check by getting the category name first
+    // Check if any products are using this category by getting the category name first
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
       select: { name: true }
