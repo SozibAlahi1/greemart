@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: 'asc' }
   });
 
-  const cart: CartItem[] = cartItems.map(item => ({
+  type CartItemType = typeof cartItems[0];
+
+  const cart: CartItem[] = cartItems.map((item: CartItemType) => ({
     productId: item.productId,
     quantity: item.quantity,
     name: item.name,
@@ -56,7 +58,9 @@ export async function POST(request: NextRequest) {
         orderBy: { createdAt: 'asc' }
       });
 
-      return NextResponse.json(cartItems.map(item => ({
+      type CartItemType = typeof cartItems[0];
+
+      return NextResponse.json(cartItems.map((item: CartItemType) => ({
         productId: item.productId,
         quantity: item.quantity,
         name: item.name,
@@ -80,7 +84,9 @@ export async function POST(request: NextRequest) {
         orderBy: { createdAt: 'asc' }
       });
 
-      return NextResponse.json(cartItems.map(item => ({
+      type CartItemType = typeof cartItems[0];
+
+      return NextResponse.json(cartItems.map((item: CartItemType) => ({
         productId: item.productId,
         quantity: item.quantity,
         name: item.name,
@@ -120,7 +126,9 @@ export async function DELETE(request: NextRequest) {
     orderBy: { createdAt: 'asc' }
   });
 
-  return NextResponse.json(cartItems.map(item => ({
+  type CartItemType = typeof cartItems[0];
+
+  return NextResponse.json(cartItems.map((item: CartItemType) => ({
     productId: item.productId,
     quantity: item.quantity,
     name: item.name,
@@ -166,7 +174,9 @@ export async function PATCH(request: NextRequest) {
       orderBy: { createdAt: 'asc' }
     });
 
-    return NextResponse.json(cartItems.map(item => ({
+    type CartItemType = typeof cartItems[0];
+
+    return NextResponse.json(cartItems.map((item: CartItemType) => ({
       productId: item.productId,
       quantity: item.quantity,
       name: item.name,
