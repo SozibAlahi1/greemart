@@ -13,12 +13,15 @@ export async function GET(request: NextRequest) {
   });
 
   // Transform to match expected format
-  const formattedOrders = orders.map(order => ({
+  type OrderWithItems = typeof orders[0];
+  type OrderItem = typeof orders[0]['items'][0];
+  
+  const formattedOrders = orders.map((order: OrderWithItems) => ({
     orderId: order.orderId,
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map(item => ({
+    items: order.items.map((item: OrderItem) => ({
       productId: item.productId,
       quantity: item.quantity,
       name: item.name,
@@ -74,12 +77,14 @@ export async function POST(request: NextRequest) {
     });
 
     // Format response
+    type CreatedOrderItem = typeof order.items[0];
+    
     const formattedOrder = {
       orderId: order.orderId,
       customerName: order.customerName,
       phone: order.phone,
       address: order.address,
-      items: order.items.map(item => ({
+      items: order.items.map((item: CreatedOrderItem) => ({
         productId: item.productId,
         quantity: item.quantity,
         name: item.name,
@@ -115,12 +120,15 @@ export async function getOrders() {
     }
   });
 
-  return orders.map(order => ({
+  type OrderWithItems = typeof orders[0];
+  type OrderItem = typeof orders[0]['items'][0];
+  
+  return orders.map((order: OrderWithItems) => ({
     orderId: order.orderId,
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map(item => ({
+    items: order.items.map((item: OrderItem) => ({
       productId: item.productId,
       quantity: item.quantity,
       name: item.name,
@@ -151,12 +159,14 @@ export async function getOrder(id: string) {
 
   if (!order) return null;
 
+  type OrderItem = typeof order.items[0];
+
   return {
     orderId: order.orderId,
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map(item => ({
+    items: order.items.map((item: OrderItem) => ({
       productId: item.productId,
       quantity: item.quantity,
       name: item.name,
