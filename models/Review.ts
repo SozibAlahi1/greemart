@@ -10,6 +10,13 @@ export interface IReview extends Document {
   createdAt: Date;
 }
 
+// Type for lean documents (returned by .lean())
+export type ReviewLean = Omit<IReview, keyof Document> & {
+  _id: string;
+  productId: mongoose.Types.ObjectId;
+  createdAt: Date;
+};
+
 const ReviewSchema = new Schema<IReview>(
   {
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },

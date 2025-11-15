@@ -1,6 +1,6 @@
 // Reviews data store using MongoDB
 import connectDB from '@/lib/mongodb';
-import Review from '@/models/Review';
+import Review, { ReviewLean } from '@/models/Review';
 
 export interface Review {
   id: string;
@@ -14,9 +14,9 @@ export interface Review {
 
 export async function getReviews(productId: string): Promise<Review[]> {
   await connectDB();
-  const reviews = await Review.find({ productId }).sort({ createdAt: -1 }).lean();
+  const reviews = await Review.find({ productId }).sort({ createdAt: -1 }).lean<ReviewLean[]>();
 
-  return reviews.map((review) => ({
+  return reviews.map((review: ReviewLean) => ({
     id: review._id.toString(),
     productId: review.productId.toString(),
     userName: review.userName,
@@ -51,10 +51,10 @@ export async function addReview(productId: string, userName: string, rating: num
 
 export async function getAverageRating(productId: string): Promise<number> {
   await connectDB();
-  const reviews = await Review.find({ productId }).select('rating').lean();
+  const reviews = await Review.find({ productId }).select('rating').lean<Pick<ReviewLean, 'rating'>[]>();
 
   if (reviews.length === 0) return 0;
   
-  const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+  const sum = reviews.reduce((acc: number, review: Pick<ReviewLean, 'rating'>) => acc + review.rating, 0);
   return sum / reviews.length;
 }
