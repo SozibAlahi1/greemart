@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { put } from '@vercel/blob';
 
 // GET /api/admin/upload - Return method not allowed message
 export async function GET() {
@@ -42,33 +40,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
     // Generate unique filename
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
     const extension = file.name.split('.').pop();
-    const filename = `product-${timestamp}-${randomString}.${extension}`;
+    const filename = `products/product-${timestamp}-${randomString}.${extension}`;
 
-    // Ensure uploads directory exists
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'products');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // Save file
-    const filepath = join(uploadsDir, filename);
-    await writeFile(filepath, buffer);
+    // Upload to Vercel Blob Storage
+    const blob = await put(filename, file, {
+      access: 'public',
+      contentType: file.type,
+    });
 
     // Return the public URL
-    const publicUrl = `/uploads/products/${filename}`;
-
-    return NextResponse.json({ url: publicUrl, filename });
-  } catch (error) {
+    return NextResponse.json({ 
+      url: blob.url, 
+      filename: filename.split('/').pop() 
+    });
+  } catch (error: any) {
     console.error('Error uploading file:', error);
+    
+    // Handle specific Vercel Blob errors
+    if (error.message?.includes('BLOB_STORE_NOT_FOUND')) {
+      return NextResponse.json(
+        { error: 'Blob storage not configured. Please set up Vercel Blob Storage in your project settings.' },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { 
+        error: 'Failed to upload file',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     );
   }
