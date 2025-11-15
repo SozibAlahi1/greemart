@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Order, { OrderLean } from '@/models/Order';
+import Order, { OrderLean, IOrderItem } from '@/models/Order';
 
 // GET /api/admin/orders
 export async function GET(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map((item) => ({
+    items: order.items.map((item: IOrderItem) => ({
       productId: item.productId.toString(),
       quantity: item.quantity,
       name: item.name,
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       customerName: order.customerName,
       phone: order.phone,
       address: order.address,
-      items: order.items.map((item) => ({
+      items: order.items.map((item: IOrderItem) => ({
         productId: item.productId.toString(),
         quantity: item.quantity,
         name: item.name,
@@ -101,7 +101,7 @@ export async function getOrders() {
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map((item) => ({
+    items: order.items.map((item: IOrderItem) => ({
       productId: item.productId.toString(),
       quantity: item.quantity,
       name: item.name,
@@ -133,7 +133,7 @@ export async function getOrder(id: string) {
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map((item) => ({
+    items: order.items.map((item: IOrderItem) => ({
       productId: item.productId.toString(),
       quantity: item.quantity,
       name: item.name,
