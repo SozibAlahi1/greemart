@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Category from '@/models/Category';
+import Category, { CategoryLean } from '@/models/Category';
 import Product from '@/models/Product';
 
 // GET /api/categories/[id]
@@ -12,7 +12,7 @@ export async function GET(
     await connectDB();
     const { id } = await params;
 
-    const category = await Category.findById(id).lean();
+    const category = await Category.findById(id).lean<CategoryLean>();
 
     if (!category) {
       return NextResponse.json(
@@ -86,7 +86,7 @@ export async function PATCH(
         slug
       },
       { new: true }
-    ).lean();
+    ).lean<CategoryLean>();
 
     if (!category) {
       return NextResponse.json(
@@ -126,7 +126,7 @@ export async function DELETE(
     await connectDB();
     const { id } = await params;
 
-    const category = await Category.findById(id).lean();
+    const category = await Category.findById(id).lean<CategoryLean>();
 
     if (!category) {
       return NextResponse.json(

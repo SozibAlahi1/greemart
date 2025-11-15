@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Category from '@/models/Category';
+import Category, { CategoryLean } from '@/models/Category';
 
 // GET /api/categories
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    const categories = await Category.find({}).sort({ name: 1 }).lean();
-    return NextResponse.json(categories.map(c => ({
+    const categories = await Category.find({}).sort({ name: 1 }).lean<CategoryLean[]>();
+    return NextResponse.json(categories.map((c: CategoryLean) => ({
       id: c._id.toString(),
       name: c.name,
       slug: c.slug,

@@ -7,6 +7,13 @@ export interface ICategory extends Document {
   updatedAt: Date;
 }
 
+// Type for lean documents (returned by .lean())
+export type CategoryLean = Omit<ICategory, keyof Document> & {
+  _id: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 const CategorySchema = new Schema<ICategory>(
   {
     name: { type: String, required: true, unique: true },
