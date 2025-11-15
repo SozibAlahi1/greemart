@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/sheet';
 
 interface CartItem {
-  productId: number;
+  productId: string;
   quantity: number;
   name: string;
   price: number;
@@ -87,7 +87,7 @@ export default function Header() {
     }
   };
 
-  const updateQuantity = async (productId: number, quantity: number) => {
+  const updateQuantity = async (productId: string, quantity: number) => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/cart', {
@@ -108,7 +108,7 @@ export default function Header() {
     }
   };
 
-  const removeItem = async (productId: number) => {
+  const removeItem = async (productId: string) => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/cart?productId=${productId}`, {

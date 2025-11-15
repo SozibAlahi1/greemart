@@ -1,9 +1,10 @@
-// Reviews data store using SQLite database
-import { prisma } from '@/lib/prisma';
+// Reviews data store using MongoDB
+import connectDB from '@/lib/mongodb';
+import Review from '@/models/Review';
 
 export interface Review {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   userName: string;
   rating: number;
   comment: string;
@@ -11,17 +12,13 @@ export interface Review {
   verified: boolean;
 }
 
-export async function getReviews(productId: number): Promise<Review[]> {
-  const reviews = await prisma.review.findMany({
-    where: { productId },
-    orderBy: { createdAt: 'desc' }
-  });
+export async function getReviews(productId: string): Promise<Review[]> {
+  await connectDB();
+  const reviews = await Review.find({ productId }).sort({ createdAt: -1 }).lean();
 
-  type ReviewType = typeof reviews[0];
-
-  return reviews.map((review: ReviewType) => ({
-    id: review.id,
-    productId: review.productId,
+  return reviews.map((review) => ({
+    id: review._id.toString(),
+    productId: review.productId.toString(),
     userName: review.userName,
     rating: review.rating,
     comment: review.comment,
@@ -30,21 +27,20 @@ export async function getReviews(productId: number): Promise<Review[]> {
   }));
 }
 
-export async function addReview(productId: number, userName: string, rating: number, comment: string): Promise<Review> {
-  const newReview = await prisma.review.create({
-    data: {
-      productId,
-      userName,
-      rating,
-      comment,
-      date: new Date().toISOString().split('T')[0],
-      verified: false
-    }
+export async function addReview(productId: string, userName: string, rating: number, comment: string): Promise<Review> {
+  await connectDB();
+  const newReview = await Review.create({
+    productId,
+    userName,
+    rating,
+    comment,
+    date: new Date().toISOString().split('T')[0],
+    verified: false
   });
 
   return {
-    id: newReview.id,
-    productId: newReview.productId,
+    id: newReview._id.toString(),
+    productId: newReview.productId.toString(),
     userName: newReview.userName,
     rating: newReview.rating,
     comment: newReview.comment,
@@ -53,15 +49,12 @@ export async function addReview(productId: number, userName: string, rating: num
   };
 }
 
-export async function getAverageRating(productId: number): Promise<number> {
-  const reviews = await prisma.review.findMany({
-    where: { productId },
-    select: { rating: true }
-  });
+export async function getAverageRating(productId: string): Promise<number> {
+  await connectDB();
+  const reviews = await Review.find({ productId }).select('rating').lean();
 
   if (reviews.length === 0) return 0;
   
-  type ReviewType = typeof reviews[0];
-  const sum = reviews.reduce((acc: number, review: ReviewType) => acc + review.rating, 0);
+  const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
   return sum / reviews.length;
 }

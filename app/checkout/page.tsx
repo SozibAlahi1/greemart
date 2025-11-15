@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 
 interface CartItem {
-  productId: number;
+  productId: string;
   quantity: number;
   name: string;
   price: number;

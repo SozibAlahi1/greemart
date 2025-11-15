@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import connectDB from '@/lib/mongodb';
+import Order from '@/models/Order';
 
 // GET /api/admin/orders/[id]
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await connectDB();
   const { id } = await params;
   
-  const order = await prisma.order.findFirst({
-    where: {
-      OR: [
-        { orderId: id },
-        { id: id }
-      ]
-    },
-    include: {
-      items: true
-    }
-  });
+  const order = await Order.findOne({
+    $or: [
+      { orderId: id },
+      { _id: id }
+    ]
+  }).lean();
 
   if (!order) {
     return NextResponse.json(
@@ -27,15 +24,13 @@ export async function GET(
     );
   }
 
-  type OrderItem = typeof order.items[0];
-
   const formattedOrder = {
     orderId: order.orderId,
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map((item: OrderItem) => ({
-      productId: item.productId,
+    items: order.items.map((item) => ({
+      productId: item.productId.toString(),
       quantity: item.quantity,
       name: item.name,
       price: item.price,
@@ -57,19 +52,18 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await connectDB();
   const { id } = await params;
   
   try {
     const body = await request.json();
     const { customerName, phone, address, status, subtotal, tax, shipping, total } = body;
 
-    const order = await prisma.order.findFirst({
-      where: {
-        OR: [
-          { orderId: id },
-          { id: id }
-        ]
-      }
+    const order = await Order.findOne({
+      $or: [
+        { orderId: id },
+        { _id: id }
+      ]
     });
 
     if (!order) {
@@ -79,43 +73,35 @@ export async function PATCH(
       );
     }
 
-    const updated = await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        ...(customerName && { customerName }),
-        ...(phone && { phone }),
-        ...(address && { address }),
-        ...(status && { status }),
-        ...(subtotal !== undefined && { subtotal }),
-        ...(tax !== undefined && { tax }),
-        ...(shipping !== undefined && { shipping }),
-        ...(total !== undefined && { total })
-      },
-      include: {
-        items: true
-      }
-    });
+    if (customerName) order.customerName = customerName;
+    if (phone) order.phone = phone;
+    if (address) order.address = address;
+    if (status) order.status = status;
+    if (subtotal !== undefined) order.subtotal = subtotal;
+    if (tax !== undefined) order.tax = tax;
+    if (shipping !== undefined) order.shipping = shipping;
+    if (total !== undefined) order.total = total;
 
-    type UpdatedOrderItem = typeof updated.items[0];
+    await order.save();
 
     const formattedOrder = {
-      orderId: updated.orderId,
-      customerName: updated.customerName,
-      phone: updated.phone,
-      address: updated.address,
-      items: updated.items.map((item: UpdatedOrderItem) => ({
-        productId: item.productId,
+      orderId: order.orderId,
+      customerName: order.customerName,
+      phone: order.phone,
+      address: order.address,
+      items: order.items.map((item) => ({
+        productId: item.productId.toString(),
         quantity: item.quantity,
         name: item.name,
         price: item.price,
         image: item.image
       })),
-      subtotal: updated.subtotal,
-      tax: updated.tax,
-      shipping: updated.shipping,
-      total: updated.total,
-      orderDate: updated.orderDate.toISOString(),
-      status: updated.status
+      subtotal: order.subtotal,
+      tax: order.tax,
+      shipping: order.shipping,
+      total: order.total,
+      orderDate: order.orderDate.toISOString(),
+      status: order.status
     };
 
     return NextResponse.json(formattedOrder);
@@ -127,6 +113,3 @@ export async function PATCH(
     );
   }
 }
-
-
-

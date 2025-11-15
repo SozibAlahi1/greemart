@@ -1,8 +1,10 @@
-// Product data store using SQLite database
-import { prisma } from '@/lib/prisma';
+// Product data store using MongoDB
+import connectDB from '@/lib/mongodb';
+import Product from '@/models/Product';
+import Category from '@/models/Category';
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   fullDescription?: string;
@@ -15,31 +17,24 @@ export interface Product {
 
 // Get categories from database
 export async function getCategories(): Promise<string[]> {
-  const categories = await prisma.category.findMany({
-    orderBy: { name: 'asc' },
-    select: { name: true }
-  });
-  type CategoryType = typeof categories[0];
-  return ['All', ...categories.map((c: CategoryType) => c.name)];
+  await connectDB();
+  const categories = await Category.find({}).sort({ name: 1 }).select('name').lean();
+  return ['All', ...categories.map((c) => c.name)];
 }
 
 // For backward compatibility, export a function that returns categories
 export const categories = getCategories;
 
 export async function getProducts(category?: string): Promise<Product[]> {
+  await connectDB();
   const where = category && category !== 'All' 
     ? { category } 
     : {};
   
-  const products = await prisma.product.findMany({
-    where,
-    orderBy: { id: 'asc' }
-  });
+  const products = await Product.find(where).sort({ createdAt: 1 }).lean();
   
-  type ProductType = typeof products[0];
-  
-  return products.map((p: ProductType) => ({
-    id: p.id,
+  return products.map((p) => ({
+    id: p._id.toString(),
     name: p.name,
     description: p.description,
     fullDescription: p.fullDescription || undefined,
@@ -51,15 +46,14 @@ export async function getProducts(category?: string): Promise<Product[]> {
   }));
 }
 
-export async function getProduct(id: number): Promise<Product | undefined> {
-  const product = await prisma.product.findUnique({
-    where: { id }
-  });
+export async function getProduct(id: string): Promise<Product | undefined> {
+  await connectDB();
+  const product = await Product.findById(id).lean();
   
   if (!product) return undefined;
   
   return {
-    id: product.id,
+    id: product._id.toString(),
     name: product.name,
     description: product.description,
     fullDescription: product.fullDescription || undefined,
@@ -72,23 +66,18 @@ export async function getProduct(id: number): Promise<Product | undefined> {
 }
 
 export async function searchProducts(query: string): Promise<Product[]> {
+  await connectDB();
   const lowerQuery = query.toLowerCase();
-  // SQLite doesn't support case-insensitive mode, so we'll filter in memory
-  const allProducts = await prisma.product.findMany({
-    orderBy: { id: 'asc' }
-  });
   
-  type AllProductType = typeof allProducts[0];
+  const products = await Product.find({
+    $or: [
+      { name: { $regex: lowerQuery, $options: 'i' } },
+      { description: { $regex: lowerQuery, $options: 'i' } }
+    ]
+  }).sort({ createdAt: 1 }).lean();
   
-  const products = allProducts.filter((product: AllProductType) =>
-    product.name.toLowerCase().includes(lowerQuery) ||
-    product.description.toLowerCase().includes(lowerQuery)
-  );
-  
-  type ProductType = typeof products[0];
-  
-  return products.map((p: ProductType) => ({
-    id: p.id,
+  return products.map((p) => ({
+    id: p._id.toString(),
     name: p.name,
     description: p.description,
     fullDescription: p.fullDescription || undefined,
@@ -101,21 +90,20 @@ export async function searchProducts(query: string): Promise<Product[]> {
 }
 
 export async function addProduct(product: Omit<Product, 'id'>): Promise<Product> {
-  const newProduct = await prisma.product.create({
-    data: {
-      name: product.name,
-      description: product.description,
-      fullDescription: product.fullDescription,
-      price: product.price,
-      image: product.image,
-      category: product.category,
-      inStock: product.inStock,
-      rating: product.rating
-    }
+  await connectDB();
+  const newProduct = await Product.create({
+    name: product.name,
+    description: product.description,
+    fullDescription: product.fullDescription,
+    price: product.price,
+    image: product.image,
+    category: product.category,
+    inStock: product.inStock,
+    rating: product.rating
   });
   
   return {
-    id: newProduct.id,
+    id: newProduct._id.toString(),
     name: newProduct.name,
     description: newProduct.description,
     fullDescription: newProduct.fullDescription || undefined,
@@ -127,23 +115,27 @@ export async function addProduct(product: Omit<Product, 'id'>): Promise<Product>
   };
 }
 
-export async function updateProduct(id: number, updates: Partial<Product>): Promise<Product | undefined> {
-  const updated = await prisma.product.update({
-    where: { id },
-    data: {
-      name: updates.name,
-      description: updates.description,
-      fullDescription: updates.fullDescription,
-      price: updates.price,
-      image: updates.image,
-      category: updates.category,
-      inStock: updates.inStock,
-      rating: updates.rating
-    }
-  });
+export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product | undefined> {
+  await connectDB();
+  const updated = await Product.findByIdAndUpdate(
+    id,
+    {
+      ...(updates.name && { name: updates.name }),
+      ...(updates.description && { description: updates.description }),
+      ...(updates.fullDescription !== undefined && { fullDescription: updates.fullDescription }),
+      ...(updates.price !== undefined && { price: updates.price }),
+      ...(updates.image && { image: updates.image }),
+      ...(updates.category && { category: updates.category }),
+      ...(updates.inStock !== undefined && { inStock: updates.inStock }),
+      ...(updates.rating !== undefined && { rating: updates.rating })
+    },
+    { new: true }
+  ).lean();
+  
+  if (!updated) return undefined;
   
   return {
-    id: updated.id,
+    id: updated._id.toString(),
     name: updated.name,
     description: updated.description,
     fullDescription: updated.fullDescription || undefined,
@@ -155,11 +147,10 @@ export async function updateProduct(id: number, updates: Partial<Product>): Prom
   };
 }
 
-export async function deleteProduct(id: number): Promise<boolean> {
+export async function deleteProduct(id: string): Promise<boolean> {
   try {
-    await prisma.product.delete({
-      where: { id }
-    });
+    await connectDB();
+    await Product.findByIdAndDelete(id);
     return true;
   } catch (error) {
     return false;

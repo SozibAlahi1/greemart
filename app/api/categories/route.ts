@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import connectDB from '@/lib/mongodb';
+import Category from '@/models/Category';
 
 // GET /api/categories
 export async function GET(request: NextRequest) {
   try {
-    const categories = await prisma.category.findMany({
-      orderBy: { name: 'asc' }
-    });
-    return NextResponse.json(categories);
+    await connectDB();
+    const categories = await Category.find({}).sort({ name: 1 }).lean();
+    return NextResponse.json(categories.map(c => ({
+      id: c._id.toString(),
+      name: c.name,
+      slug: c.slug,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt
+    })));
   } catch (error) {
     console.error('Error fetching categories:', error);
     return NextResponse.json(
@@ -20,6 +26,7 @@ export async function GET(request: NextRequest) {
 // POST /api/categories
 export async function POST(request: NextRequest) {
   try {
+    await connectDB();
     let body;
     try {
       body = await request.json();
@@ -48,13 +55,11 @@ export async function POST(request: NextRequest) {
       .replace(/^-+|-+$/g, '');
 
     // Check if category with same name or slug already exists
-    const existing = await prisma.category.findFirst({
-      where: {
-        OR: [
-          { name: name.trim() },
-          { slug }
-        ]
-      }
+    const existing = await Category.findOne({
+      $or: [
+        { name: name.trim() },
+        { slug }
+      ]
     });
 
     if (existing) {
@@ -64,19 +69,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const category = await prisma.category.create({
-      data: {
-        name: name.trim(),
-        slug
-      }
+    const category = await Category.create({
+      name: name.trim(),
+      slug
     });
 
-    return NextResponse.json(category, { status: 201 });
+    return NextResponse.json({
+      id: category._id.toString(),
+      name: category.name,
+      slug: category.slug,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt
+    }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating category:', error);
     
-    // Handle Prisma-specific errors
-    if (error.code === 'P2002') {
+    // Handle MongoDB duplicate key error
+    if (error.code === 11000) {
       return NextResponse.json(
         { error: 'Category with this name or slug already exists' },
         { status: 400 }
@@ -94,5 +103,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

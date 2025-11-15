@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 interface Review {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   userName: string;
   rating: number;
   comment: string;
@@ -18,7 +18,7 @@ interface Review {
 }
 
 interface ReviewSectionProps {
-  productId: number;
+  productId: string;
 }
 
 export default function ReviewSection({ productId }: ReviewSectionProps) {

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const reviews = await getReviews(parseInt(productId));
+  const reviews = await getReviews(productId);
   return NextResponse.json(reviews);
 }
 
@@ -46,4 +46,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

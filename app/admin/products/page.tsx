@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;
@@ -46,7 +46,7 @@ export default function AdminProducts() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) {
       return;
     }

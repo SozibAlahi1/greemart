@@ -13,7 +13,7 @@ import ProductCard from '@/app/components/ProductCard';
 import { useToast } from '@/app/components/Toast';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   fullDescription?: string;
@@ -34,11 +34,11 @@ export default function ProductPage() {
 
   useEffect(() => {
     if (params.id) {
-      fetchProduct(Number(params.id));
+      fetchProduct(String(params.id));
     }
   }, [params.id]);
 
-  const fetchProduct = async (id: number) => {
+  const fetchProduct = async (id: string) => {
     try {
       const response = await fetch(`/api/products/${id}`);
       if (response.ok) {
@@ -54,7 +54,7 @@ export default function ProductPage() {
     }
   };
 
-  const fetchRelatedProducts = async (category: string, currentProductId: number) => {
+  const fetchRelatedProducts = async (category: string, currentProductId: string) => {
     try {
       const response = await fetch('/api/products');
       if (response.ok) {

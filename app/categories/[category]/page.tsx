@@ -9,7 +9,7 @@ import ProductCard from '@/app/components/ProductCard';
 import { useToast } from '@/app/components/Toast';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import connectDB from '@/lib/mongodb';
+import CartItem from '@/models/CartItem';
 
 export interface CartItem {
-  productId: number;
+  productId: string;
   quantity: number;
   name: string;
   price: number;
@@ -11,17 +12,13 @@ export interface CartItem {
 
 // GET /api/cart
 export async function GET(request: NextRequest) {
+  await connectDB();
   const sessionId = request.headers.get('x-session-id') || 'default';
   
-  const cartItems = await prisma.cartItem.findMany({
-    where: { sessionId },
-    orderBy: { createdAt: 'asc' }
-  });
+  const cartItems = await CartItem.find({ sessionId }).sort({ createdAt: 1 }).lean();
 
-  type CartItemType = typeof cartItems[0];
-
-  const cart: CartItem[] = cartItems.map((item: CartItemType) => ({
-    productId: item.productId,
+  const cart: CartItem[] = cartItems.map((item) => ({
+    productId: item.productId.toString(),
     quantity: item.quantity,
     name: item.name,
     price: item.price,
@@ -34,60 +31,43 @@ export async function GET(request: NextRequest) {
 // POST /api/cart
 export async function POST(request: NextRequest) {
   try {
+    await connectDB();
     const sessionId = request.headers.get('x-session-id') || 'default';
     const body = await request.json();
     const { productId, quantity, name, price, image } = body;
 
-    const existingItem = await prisma.cartItem.findFirst({
-      where: {
-        sessionId,
-        productId
-      }
+    const existingItem = await CartItem.findOne({
+      sessionId,
+      productId
     });
 
     if (existingItem) {
-      const updated = await prisma.cartItem.update({
-        where: { id: existingItem.id },
-        data: {
-          quantity: existingItem.quantity + (quantity || 1)
-        }
-      });
+      existingItem.quantity += (quantity || 1);
+      await existingItem.save();
 
-      const cartItems = await prisma.cartItem.findMany({
-        where: { sessionId },
-        orderBy: { createdAt: 'asc' }
-      });
+      const cartItems = await CartItem.find({ sessionId }).sort({ createdAt: 1 }).lean();
 
-      type CartItemType = typeof cartItems[0];
-
-      return NextResponse.json(cartItems.map((item: CartItemType) => ({
-        productId: item.productId,
+      return NextResponse.json(cartItems.map((item) => ({
+        productId: item.productId.toString(),
         quantity: item.quantity,
         name: item.name,
         price: item.price,
         image: item.image
       })));
     } else {
-      await prisma.cartItem.create({
-        data: {
-          sessionId,
-          productId,
-          quantity: quantity || 1,
-          name,
-          price,
-          image
-        }
+      await CartItem.create({
+        sessionId,
+        productId,
+        quantity: quantity || 1,
+        name,
+        price,
+        image
       });
 
-      const cartItems = await prisma.cartItem.findMany({
-        where: { sessionId },
-        orderBy: { createdAt: 'asc' }
-      });
+      const cartItems = await CartItem.find({ sessionId }).sort({ createdAt: 1 }).lean();
 
-      type CartItemType = typeof cartItems[0];
-
-      return NextResponse.json(cartItems.map((item: CartItemType) => ({
-        productId: item.productId,
+      return NextResponse.json(cartItems.map((item) => ({
+        productId: item.productId.toString(),
         quantity: item.quantity,
         name: item.name,
         price: item.price,
@@ -104,32 +84,24 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/cart
 export async function DELETE(request: NextRequest) {
+  await connectDB();
   const sessionId = request.headers.get('x-session-id') || 'default';
   const searchParams = request.nextUrl.searchParams;
   const productId = searchParams.get('productId');
 
   if (productId) {
-    await prisma.cartItem.deleteMany({
-      where: {
-        sessionId,
-        productId: parseInt(productId)
-      }
+    await CartItem.deleteMany({
+      sessionId,
+      productId
     });
   } else {
-    await prisma.cartItem.deleteMany({
-      where: { sessionId }
-    });
+    await CartItem.deleteMany({ sessionId });
   }
 
-  const cartItems = await prisma.cartItem.findMany({
-    where: { sessionId },
-    orderBy: { createdAt: 'asc' }
-  });
+  const cartItems = await CartItem.find({ sessionId }).sort({ createdAt: 1 }).lean();
 
-  type CartItemType = typeof cartItems[0];
-
-  return NextResponse.json(cartItems.map((item: CartItemType) => ({
-    productId: item.productId,
+  return NextResponse.json(cartItems.map((item) => ({
+    productId: item.productId.toString(),
     quantity: item.quantity,
     name: item.name,
     price: item.price,
@@ -140,15 +112,14 @@ export async function DELETE(request: NextRequest) {
 // PATCH /api/cart
 export async function PATCH(request: NextRequest) {
   try {
+    await connectDB();
     const sessionId = request.headers.get('x-session-id') || 'default';
     const body = await request.json();
     const { productId, quantity } = body;
 
-    const item = await prisma.cartItem.findFirst({
-      where: {
-        sessionId,
-        productId
-      }
+    const item = await CartItem.findOne({
+      sessionId,
+      productId
     });
 
     if (!item) {
@@ -159,25 +130,16 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (quantity <= 0) {
-      await prisma.cartItem.delete({
-        where: { id: item.id }
-      });
+      await CartItem.findByIdAndDelete(item._id);
     } else {
-      await prisma.cartItem.update({
-        where: { id: item.id },
-        data: { quantity }
-      });
+      item.quantity = quantity;
+      await item.save();
     }
 
-    const cartItems = await prisma.cartItem.findMany({
-      where: { sessionId },
-      orderBy: { createdAt: 'asc' }
-    });
+    const cartItems = await CartItem.find({ sessionId }).sort({ createdAt: 1 }).lean();
 
-    type CartItemType = typeof cartItems[0];
-
-    return NextResponse.json(cartItems.map((item: CartItemType) => ({
-      productId: item.productId,
+    return NextResponse.json(cartItems.map((item) => ({
+      productId: item.productId.toString(),
       quantity: item.quantity,
       name: item.name,
       price: item.price,

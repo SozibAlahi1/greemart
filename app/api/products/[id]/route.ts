@@ -7,8 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const productId = parseInt(id);
-  const product = await getProduct(productId);
+  const product = await getProduct(id);
 
   if (!product) {
     return NextResponse.json(
@@ -19,4 +18,3 @@ export async function GET(
 
   return NextResponse.json(product);
 }
-

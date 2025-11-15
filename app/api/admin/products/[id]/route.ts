@@ -7,16 +7,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const productId = parseInt(id);
 
-  if (isNaN(productId)) {
-    return NextResponse.json(
-      { error: 'Invalid product ID' },
-      { status: 400 }
-    );
-  }
-
-  const deleted = await deleteProduct(productId);
+  const deleted = await deleteProduct(id);
 
   if (!deleted) {
     return NextResponse.json(
@@ -34,18 +26,10 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const productId = parseInt(id);
-
-  if (isNaN(productId)) {
-    return NextResponse.json(
-      { error: 'Invalid product ID' },
-      { status: 400 }
-    );
-  }
 
   try {
     const body = await request.json();
-    const updated = await updateProduct(productId, body);
+    const updated = await updateProduct(id, body);
 
     if (!updated) {
       return NextResponse.json(
@@ -62,5 +46,3 @@ export async function PATCH(
     );
   }
 }
-
-

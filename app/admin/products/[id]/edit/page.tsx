@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   fullDescription?: string;
@@ -46,7 +46,7 @@ export default function EditProduct() {
   useEffect(() => {
     fetchCategories();
     if (params.id) {
-      fetchProduct(Number(params.id));
+      fetchProduct(String(params.id));
     }
   }, [params.id]);
 
@@ -63,7 +63,7 @@ export default function EditProduct() {
     }
   };
 
-  const fetchProduct = async (id: number) => {
+  const fetchProduct = async (id: string) => {
     try {
       const response = await fetch(`/api/products/${id}`);
       if (response.ok) {

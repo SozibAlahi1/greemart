@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;

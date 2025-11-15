@@ -8,7 +8,7 @@ import FlashSale from './FlashSale';
 import { useToast } from './Toast';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;
