@@ -1,7 +1,7 @@
 // Product data store using MongoDB
 import connectDB from '@/lib/mongodb';
-import Product from '@/models/Product';
-import Category from '@/models/Category';
+import Product, { ProductLean } from '@/models/Product';
+import Category, { CategoryLean } from '@/models/Category';
 
 export interface Product {
   id: string;
@@ -18,8 +18,8 @@ export interface Product {
 // Get categories from database
 export async function getCategories(): Promise<string[]> {
   await connectDB();
-  const categories = await Category.find({}).sort({ name: 1 }).select('name').lean();
-  return ['All', ...categories.map((c) => c.name)];
+  const categories = await Category.find({}).sort({ name: 1 }).select('name').lean<Pick<CategoryLean, 'name'>[]>();
+  return ['All', ...categories.map((c: Pick<CategoryLean, 'name'>) => c.name)];
 }
 
 // For backward compatibility, export a function that returns categories
@@ -31,9 +31,9 @@ export async function getProducts(category?: string): Promise<Product[]> {
     ? { category } 
     : {};
   
-  const products = await Product.find(where).sort({ createdAt: 1 }).lean();
+  const products = await Product.find(where).sort({ createdAt: 1 }).lean<ProductLean[]>();
   
-  return products.map((p) => ({
+  return products.map((p: ProductLean) => ({
     id: p._id.toString(),
     name: p.name,
     description: p.description,
@@ -48,7 +48,7 @@ export async function getProducts(category?: string): Promise<Product[]> {
 
 export async function getProduct(id: string): Promise<Product | undefined> {
   await connectDB();
-  const product = await Product.findById(id).lean();
+  const product = await Product.findById(id).lean<ProductLean>();
   
   if (!product) return undefined;
   
@@ -74,9 +74,9 @@ export async function searchProducts(query: string): Promise<Product[]> {
       { name: { $regex: lowerQuery, $options: 'i' } },
       { description: { $regex: lowerQuery, $options: 'i' } }
     ]
-  }).sort({ createdAt: 1 }).lean();
+  }).sort({ createdAt: 1 }).lean<ProductLean[]>();
   
-  return products.map((p) => ({
+  return products.map((p: ProductLean) => ({
     id: p._id.toString(),
     name: p.name,
     description: p.description,
@@ -130,7 +130,7 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
       ...(updates.rating !== undefined && { rating: updates.rating })
     },
     { new: true }
-  ).lean();
+  ).lean<ProductLean>();
   
   if (!updated) return undefined;
   

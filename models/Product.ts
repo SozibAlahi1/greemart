@@ -13,6 +13,13 @@ export interface IProduct extends Document {
   updatedAt: Date;
 }
 
+// Type for lean documents (returned by .lean())
+export type ProductLean = Omit<IProduct, keyof Document> & {
+  _id: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 const ProductSchema = new Schema<IProduct>(
   {
     name: { type: String, required: true },
