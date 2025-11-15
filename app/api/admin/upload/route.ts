@@ -12,6 +12,18 @@ export async function GET() {
 // POST /api/admin/upload
 export async function POST(request: NextRequest) {
   try {
+    // Check if BLOB_READ_WRITE_TOKEN is available
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error('BLOB_READ_WRITE_TOKEN is not set');
+      return NextResponse.json(
+        { 
+          error: 'Blob storage token not configured. Please set BLOB_READ_WRITE_TOKEN in your Vercel environment variables.',
+          hint: 'Go to Vercel Dashboard → Your Project → Settings → Environment Variables and ensure BLOB_READ_WRITE_TOKEN is set.'
+        },
+        { status: 500 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -46,11 +58,15 @@ export async function POST(request: NextRequest) {
     const extension = file.name.split('.').pop();
     const filename = `products/product-${timestamp}-${randomString}.${extension}`;
 
+    console.log('Uploading file to Vercel Blob Storage:', filename);
+
     // Upload to Vercel Blob Storage
     const blob = await put(filename, file, {
       access: 'public',
       contentType: file.type,
     });
+
+    console.log('File uploaded successfully:', blob.url);
 
     // Return the public URL
     return NextResponse.json({ 
@@ -59,11 +75,30 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error uploading file:', error);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      code: error.code
+    });
     
     // Handle specific Vercel Blob errors
-    if (error.message?.includes('BLOB_STORE_NOT_FOUND')) {
+    if (error.message?.includes('BLOB_STORE_NOT_FOUND') || error.message?.includes('store not found')) {
       return NextResponse.json(
-        { error: 'Blob storage not configured. Please set up Vercel Blob Storage in your project settings.' },
+        { 
+          error: 'Blob storage not configured. Please create a Blob store in your Vercel project.',
+          hint: 'Go to Vercel Dashboard → Your Project → Storage → Create Database → Select "Blob"'
+        },
+        { status: 500 }
+      );
+    }
+
+    if (error.message?.includes('token') || error.message?.includes('unauthorized') || error.message?.includes('401')) {
+      return NextResponse.json(
+        { 
+          error: 'Blob storage authentication failed. Please check your BLOB_READ_WRITE_TOKEN.',
+          hint: 'Ensure BLOB_READ_WRITE_TOKEN is correctly set in Vercel environment variables.'
+        },
         { status: 500 }
       );
     }
@@ -71,7 +106,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Failed to upload file',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        message: error.message || 'Unknown error',
+        details: process.env.NODE_ENV === 'development' ? {
+          message: error.message,
+          name: error.name,
+          code: error.code
+        } : undefined
       },
       { status: 500 }
     );
