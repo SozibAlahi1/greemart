@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Order from '@/models/Order';
+import Order, { OrderLean } from '@/models/Order';
 
 // GET /api/admin/orders/[id]
 export async function GET(
@@ -15,7 +15,7 @@ export async function GET(
       { orderId: id },
       { _id: id }
     ]
-  }).lean();
+  }).lean<OrderLean>();
 
   if (!order) {
     return NextResponse.json(

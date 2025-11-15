@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Order from '@/models/Order';
+import Order, { OrderLean } from '@/models/Order';
 
 // GET /api/admin/orders
 export async function GET(request: NextRequest) {
   await connectDB();
-  const orders = await Order.find({}).sort({ createdAt: -1 }).lean();
+  const orders = await Order.find({}).sort({ createdAt: -1 }).lean<OrderLean[]>();
 
   const formattedOrders = orders.map((order) => ({
     orderId: order.orderId,
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 // Export function to get orders (for use in other modules)
 export async function getOrders() {
   await connectDB();
-  const orders = await Order.find({}).sort({ createdAt: -1 }).lean();
+  const orders = await Order.find({}).sort({ createdAt: -1 }).lean<OrderLean[]>();
   
   return orders.map((order) => ({
     orderId: order.orderId,
@@ -124,7 +124,7 @@ export async function getOrder(id: string) {
       { orderId: id },
       { _id: id }
     ]
-  }).lean();
+  }).lean<OrderLean>();
 
   if (!order) return null;
 

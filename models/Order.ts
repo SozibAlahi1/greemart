@@ -25,6 +25,13 @@ export interface IOrder extends Document {
   updatedAt: Date;
 }
 
+// Type for lean documents (returned by .lean())
+export type OrderLean = Omit<IOrder, keyof Document> & {
+  _id: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 const OrderItemSchema = new Schema<IOrderItem>(
   {
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
