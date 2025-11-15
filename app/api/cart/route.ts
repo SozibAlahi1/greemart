@@ -12,20 +12,28 @@ export interface CartItem {
 
 // GET /api/cart
 export async function GET(request: NextRequest) {
-  await connectDB();
-  const sessionId = request.headers.get('x-session-id') || 'default';
-  
-  const cartItems = await CartItem.find({ sessionId }).sort({ createdAt: 1 }).lean();
+  try {
+    await connectDB();
+    const sessionId = request.headers.get('x-session-id') || 'default';
+    
+    const cartItems = await CartItem.find({ sessionId }).sort({ createdAt: 1 }).lean();
 
-  const cart: CartItem[] = cartItems.map((item) => ({
-    productId: item.productId.toString(),
-    quantity: item.quantity,
-    name: item.name,
-    price: item.price,
-    image: item.image
-  }));
+    const cart: CartItem[] = cartItems.map((item) => ({
+      productId: item.productId.toString(),
+      quantity: item.quantity,
+      name: item.name,
+      price: item.price,
+      image: item.image
+    }));
 
-  return NextResponse.json(cart);
+    return NextResponse.json(cart);
+  } catch (error) {
+    console.error('Error fetching cart:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch cart', details: process.env.NODE_ENV === 'development' ? String(error) : undefined },
+      { status: 500 }
+    );
+  }
 }
 
 // POST /api/cart

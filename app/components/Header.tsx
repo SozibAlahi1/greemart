@@ -72,10 +72,14 @@ export default function Header() {
           'x-session-id': 'default'
         }
       });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch cart: ${response.status}`);
+      }
       const data = await response.json();
-      setCart(data);
+      setCart(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching cart:', error);
+      setCart([]);
     }
   };
 

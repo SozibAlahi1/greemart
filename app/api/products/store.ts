@@ -26,24 +26,29 @@ export async function getCategories(): Promise<string[]> {
 export const categories = getCategories;
 
 export async function getProducts(category?: string): Promise<Product[]> {
-  await connectDB();
-  const where = category && category !== 'All' 
-    ? { category } 
-    : {};
-  
-  const products = await Product.find(where).sort({ createdAt: 1 }).lean<ProductLean[]>();
-  
-  return products.map((p: ProductLean) => ({
-    id: p._id.toString(),
-    name: p.name,
-    description: p.description,
-    fullDescription: p.fullDescription || undefined,
-    price: p.price,
-    image: p.image,
-    category: p.category,
-    inStock: p.inStock,
-    rating: p.rating
-  }));
+  try {
+    await connectDB();
+    const where = category && category !== 'All' 
+      ? { category } 
+      : {};
+    
+    const products = await Product.find(where).sort({ createdAt: 1 }).lean<ProductLean[]>();
+    
+    return products.map((p: ProductLean) => ({
+      id: p._id.toString(),
+      name: p.name,
+      description: p.description,
+      fullDescription: p.fullDescription || undefined,
+      price: p.price,
+      image: p.image,
+      category: p.category,
+      inStock: p.inStock,
+      rating: p.rating
+    }));
+  } catch (error) {
+    console.error('Error in getProducts:', error);
+    return [];
+  }
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
