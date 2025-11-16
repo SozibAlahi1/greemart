@@ -78,13 +78,7 @@ function CategoryPageContent() {
 
   const addToCart = async (product: Product) => {
     try {
-      // Optimistically show success
-      showToast(`${product.name} added to cart!`, 'success');
-      
-      // Dispatch event to refresh Header cart
-      window.dispatchEvent(new CustomEvent('cartUpdated'));
-      
-      // Add to cart in background
+      // Add to cart first
       const sessionId = getSessionId();
       const response = await fetch('/api/cart', {
         method: 'POST',
@@ -101,7 +95,13 @@ function CategoryPageContent() {
         }),
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        // Show success toast
+        showToast(`${product.name} added to cart!`, 'success');
+        
+        // Dispatch event to refresh Header cart AFTER successful API call
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
+      } else {
         showToast('Failed to add item to cart', 'error');
       }
     } catch (error) {

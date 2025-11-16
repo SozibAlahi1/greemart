@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getSessionId } from '@/lib/session';
+import { useToast } from './Toast';
 
 interface Product {
   id: string;
@@ -20,10 +21,11 @@ interface Product {
 
 interface FlashSaleProps {
   products: Product[];
-  onAddToCart: (product: Product) => void;
 }
 
-export default function FlashSale({ products, onAddToCart }: FlashSaleProps) {
+export default function FlashSale({ products }: FlashSaleProps) {
+  const { showToast, ToastComponent } = useToast();
+  
   // Get first 5 products for flash sale
   const flashSaleProducts = products.slice(0, 5);
   
@@ -36,13 +38,7 @@ export default function FlashSale({ products, onAddToCart }: FlashSaleProps) {
     const salePrice = parseFloat(getSalePrice(product.price));
     
     try {
-      // Optimistically call the parent's onAddToCart
-      onAddToCart(product);
-      
-      // Dispatch event to refresh Header cart
-      window.dispatchEvent(new CustomEvent('cartUpdated'));
-      
-      // Add to cart in background with sale price
+      // Add to cart with sale price
       const sessionId = getSessionId();
       const response = await fetch('/api/cart', {
         method: 'POST',
@@ -59,17 +55,26 @@ export default function FlashSale({ products, onAddToCart }: FlashSaleProps) {
         }),
       });
 
-      if (!response.ok) {
-        console.error('Failed to add item to cart');
+      if (response.ok) {
+        // Show success toast
+        showToast(`${product.name} added to cart (Flash Sale)!`, 'success');
+        
+        // Dispatch event to refresh Header cart AFTER successful API call
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
+      } else {
+        showToast('Failed to add item to cart', 'error');
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
+      showToast('Failed to add item to cart', 'error');
     }
   };
 
   return (
-    <div className="w-full mb-0">
-      <div className="mb-6">
+    <>
+      {ToastComponent}
+      <div className="w-full mb-0">
+        <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg">
             <Clock className="h-5 w-5 animate-pulse" />
@@ -135,7 +140,8 @@ export default function FlashSale({ products, onAddToCart }: FlashSaleProps) {
           </Card>
         ))}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
