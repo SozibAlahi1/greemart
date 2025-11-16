@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { getSessionId } from '@/lib/session';
 
 interface CartItem {
   productId: string;
@@ -31,9 +32,10 @@ export default function Checkout() {
 
   const fetchCart = async () => {
     try {
+      const sessionId = getSessionId();
       const response = await fetch('/api/cart', {
         headers: {
-          'x-session-id': 'default'
+          'x-session-id': sessionId
         }
       });
       const data = await response.json();
@@ -88,10 +90,11 @@ export default function Checkout() {
     localStorage.setItem('lastOrder', JSON.stringify(orderInfo));
     
     // Clear cart
+    const sessionId = getSessionId();
     await fetch('/api/cart', {
       method: 'DELETE',
       headers: {
-        'x-session-id': 'default'
+        'x-session-id': sessionId
       }
     });
 

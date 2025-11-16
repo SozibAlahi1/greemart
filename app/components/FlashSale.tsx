@@ -5,6 +5,7 @@ import { Clock, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { getSessionId } from '@/lib/session';
 
 interface Product {
   id: string;
@@ -42,11 +43,12 @@ export default function FlashSale({ products, onAddToCart }: FlashSaleProps) {
       window.dispatchEvent(new CustomEvent('cartUpdated'));
       
       // Add to cart in background with sale price
+      const sessionId = getSessionId();
       const response = await fetch('/api/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-session-id': 'default'
+          'x-session-id': sessionId
         },
         body: JSON.stringify({
           productId: product.id,

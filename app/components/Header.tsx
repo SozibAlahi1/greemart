@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { 
   ShoppingCart, 
   Search, 
@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from './theme-toggle';
+import { getSessionId } from '@/lib/session';
 import {
   Sheet,
   SheetContent,
@@ -39,6 +40,7 @@ interface CartItem {
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -65,11 +67,17 @@ export default function Header() {
     };
   }, []);
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   const fetchCart = async () => {
     try {
+      const sessionId = getSessionId();
       const response = await fetch('/api/cart', {
         headers: {
-          'x-session-id': 'default'
+          'x-session-id': sessionId
         }
       });
       if (!response.ok) {
@@ -94,11 +102,12 @@ export default function Header() {
   const updateQuantity = async (productId: string, quantity: number) => {
     setIsLoading(true);
     try {
+      const sessionId = getSessionId();
       const response = await fetch('/api/cart', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-session-id': 'default'
+          'x-session-id': sessionId
         },
         body: JSON.stringify({ productId, quantity }),
       });
@@ -115,10 +124,11 @@ export default function Header() {
   const removeItem = async (productId: string) => {
     setIsLoading(true);
     try {
+      const sessionId = getSessionId();
       const response = await fetch(`/api/cart?productId=${productId}`, {
         method: 'DELETE',
         headers: {
-          'x-session-id': 'default'
+          'x-session-id': sessionId
         }
       });
       if (response.ok) {
