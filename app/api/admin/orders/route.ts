@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Order, { OrderLean, IOrderItem } from '@/models/Order';
+import Order, { OrderLean, IOrderItem, OrderItemLean } from '@/models/Order';
+import mongoose from 'mongoose';
 
 // GET /api/admin/orders
 export async function GET(request: NextRequest) {
@@ -12,13 +13,25 @@ export async function GET(request: NextRequest) {
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map((item: IOrderItem) => ({
-      productId: item.productId.toString(),
-      quantity: item.quantity,
-      name: item.name,
-      price: item.price,
-      image: item.image
-    })),
+    items: order.items.map((item: OrderItemLean) => {
+      // Handle productId conversion - it might be string, ObjectId, or object with toString()
+      let productIdStr: string;
+      if (typeof item.productId === 'string') {
+        productIdStr = item.productId;
+      } else if (item.productId && typeof item.productId === 'object' && 'toString' in item.productId) {
+        productIdStr = item.productId.toString();
+      } else {
+        productIdStr = String(item.productId);
+      }
+      
+      return {
+        productId: productIdStr,
+        quantity: item.quantity,
+        name: item.name,
+        price: item.price,
+        image: item.image
+      };
+    }),
     subtotal: order.subtotal,
     tax: order.tax,
     shipping: order.shipping,
@@ -101,13 +114,25 @@ export async function getOrders() {
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map((item: IOrderItem) => ({
-      productId: item.productId.toString(),
-      quantity: item.quantity,
-      name: item.name,
-      price: item.price,
-      image: item.image
-    })),
+    items: order.items.map((item: OrderItemLean) => {
+      // Handle productId conversion - it might be string, ObjectId, or object with toString()
+      let productIdStr: string;
+      if (typeof item.productId === 'string') {
+        productIdStr = item.productId;
+      } else if (item.productId && typeof item.productId === 'object' && 'toString' in item.productId) {
+        productIdStr = item.productId.toString();
+      } else {
+        productIdStr = String(item.productId);
+      }
+      
+      return {
+        productId: productIdStr,
+        quantity: item.quantity,
+        name: item.name,
+        price: item.price,
+        image: item.image
+      };
+    }),
     subtotal: order.subtotal,
     tax: order.tax,
     shipping: order.shipping,
@@ -119,12 +144,17 @@ export async function getOrders() {
 
 export async function getOrder(id: string) {
   await connectDB();
-  const order = await Order.findOne({
-    $or: [
+  
+  // Build query - only include _id if it's a valid ObjectId
+  const query: any = { orderId: id };
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    query.$or = [
       { orderId: id },
-      { _id: id }
-    ]
-  }).lean<OrderLean>();
+      { _id: new mongoose.Types.ObjectId(id) }
+    ];
+  }
+  
+  const order = await Order.findOne(query).lean<OrderLean>();
 
   if (!order) return null;
 
@@ -133,13 +163,25 @@ export async function getOrder(id: string) {
     customerName: order.customerName,
     phone: order.phone,
     address: order.address,
-    items: order.items.map((item: IOrderItem) => ({
-      productId: item.productId.toString(),
-      quantity: item.quantity,
-      name: item.name,
-      price: item.price,
-      image: item.image
-    })),
+    items: order.items.map((item: OrderItemLean) => {
+      // Handle productId conversion - it might be string, ObjectId, or object with toString()
+      let productIdStr: string;
+      if (typeof item.productId === 'string') {
+        productIdStr = item.productId;
+      } else if (item.productId && typeof item.productId === 'object' && 'toString' in item.productId) {
+        productIdStr = item.productId.toString();
+      } else {
+        productIdStr = String(item.productId);
+      }
+      
+      return {
+        productId: productIdStr,
+        quantity: item.quantity,
+        name: item.name,
+        price: item.price,
+        image: item.image
+      };
+    }),
     subtotal: order.subtotal,
     tax: order.tax,
     shipping: order.shipping,
