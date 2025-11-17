@@ -188,11 +188,8 @@ export default function Header() {
                   <ShoppingCart className="h-8 w-8 text-primary" />
                 </div>
               )}
-              <div>
-                <div className="text-2xl font-bold text-foreground group-hover:text-primary transition">
-                  {settings.siteName}
-                </div>
-                <div className="text-xs text-muted-foreground">{settings.siteDescription}</div>
+              <div className="text-2xl font-bold text-foreground group-hover:text-primary transition">
+                {settings.siteName}
               </div>
             </Link>
 

@@ -15,10 +15,15 @@ export async function GET(request: NextRequest) {
       console.log('No settings found, creating default settings...');
       // Create default settings if none exist
       const defaultSettings = await Settings.create({ _singleton: true });
-      settings = defaultSettings.toObject();
+      settings = defaultSettings.toObject() as SettingsLean;
       console.log('Default settings created:', settings._id);
     } else {
       console.log('Settings found:', settings._id);
+    }
+    
+    // TypeScript guard: ensure settings is not null
+    if (!settings) {
+      throw new Error('Failed to create or retrieve settings');
     }
     
     return NextResponse.json(settings);
