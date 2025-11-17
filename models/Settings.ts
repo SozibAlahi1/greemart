@@ -41,6 +41,9 @@ export interface ISettings extends Document {
   maintenanceMode: boolean;
   maintenanceMessage?: string;
   
+  // Internal field for singleton pattern
+  _singleton?: boolean;
+  
   updatedAt: Date;
 }
 
