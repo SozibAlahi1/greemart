@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/table';
 
 interface OrderItem {
-  productId: number;
+  productId: string;
   quantity: number;
   name: string;
   price: number;
@@ -64,6 +64,11 @@ export default function AdminOrders() {
     fetchOrders();
   }, []);
 
+  // Debug: Log dialog state changes
+  useEffect(() => {
+    console.log('Dialog state changed:', { isDialogOpen, selectedOrder: selectedOrder?.orderId });
+  }, [isDialogOpen, selectedOrder]);
+
   const fetchOrders = async () => {
     try {
       const response = await fetch('/api/admin/orders');
@@ -80,9 +85,13 @@ export default function AdminOrders() {
 
   const handleViewOrder = async (orderId: string) => {
     try {
+      console.log('Fetching order:', orderId);
       const response = await fetch(`/api/admin/orders/${orderId}`);
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Order data received:', data);
         setSelectedOrder(data);
         setEditForm({
           customerName: data.customerName,
@@ -92,9 +101,15 @@ export default function AdminOrders() {
         });
         setIsDialogOpen(true);
         setIsEditing(false);
+        console.log('Dialog should be open now');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to fetch order:', errorData);
+        alert(`Failed to load order: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error fetching order:', error);
+      alert('Error loading order. Please check the console for details.');
     }
   };
 
@@ -235,7 +250,13 @@ export default function AdminOrders() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleViewOrder(order.orderId)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('View button clicked for order:', order.orderId);
+                            handleViewOrder(order.orderId);
+                          }}
+                          type="button"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -254,14 +275,18 @@ export default function AdminOrders() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Order Details - {selectedOrder?.orderId}
+              Order Details - {selectedOrder?.orderId || 'Loading...'}
             </DialogTitle>
             <DialogDescription>
               {isEditing ? 'Edit order information' : 'View order details'}
             </DialogDescription>
           </DialogHeader>
 
-          {selectedOrder && (
+          {!selectedOrder ? (
+            <div className="flex justify-center items-center py-8">
+              <p className="text-muted-foreground">Loading order details...</p>
+            </div>
+          ) : (
             <div className="space-y-6">
               {/* Customer Information */}
               <div className="space-y-4">
