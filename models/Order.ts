@@ -26,8 +26,18 @@ export interface IOrder extends Document {
 }
 
 // Type for lean documents (returned by .lean())
-export type OrderLean = Omit<IOrder, keyof Document> & {
+// In lean queries, ObjectIds are returned as objects with toString() method or as strings
+export type OrderItemLean = {
+  productId: mongoose.Types.ObjectId | string | { toString(): string };
+  quantity: number;
+  name: string;
+  price: number;
+  image: string;
+};
+
+export type OrderLean = Omit<IOrder, keyof Document | 'items'> & {
   _id: string;
+  items: OrderItemLean[];
   createdAt: Date;
   updatedAt: Date;
 };

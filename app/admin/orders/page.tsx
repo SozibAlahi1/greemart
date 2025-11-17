@@ -88,6 +88,7 @@ export default function AdminOrders() {
       console.log('Fetching order:', orderId);
       const response = await fetch(`/api/admin/orders/${orderId}`);
       console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
       
       if (response.ok) {
         const data = await response.json();
@@ -103,13 +104,30 @@ export default function AdminOrders() {
         setIsEditing(false);
         console.log('Dialog should be open now');
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        let errorData;
+        try {
+          const text = await response.text();
+          console.log('Error response text:', text);
+          errorData = text ? JSON.parse(text) : { error: `HTTP ${response.status}: ${response.statusText}` };
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+          errorData = { 
+            error: `HTTP ${response.status}: ${response.statusText}`,
+            message: 'Failed to parse error response'
+          };
+        }
         console.error('Failed to fetch order:', errorData);
-        alert(`Failed to load order: ${errorData.error || 'Unknown error'}`);
+        const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+        alert(`Failed to load order: ${errorMessage}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching order:', error);
-      alert('Error loading order. Please check the console for details.');
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      alert(`Error loading order: ${error.message || 'Unknown error'}. Please check the console for details.`);
     }
   };
 
