@@ -31,7 +31,7 @@ export const banners: Banner[] = [
     id: 3,
     image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1920&h=600&fit=crop',
     title: 'Free Delivery',
-    subtitle: 'On orders over ৳50. Shop now and save!',
+    subtitle: 'On orders over ৳500. Shop now and save!', // This will be dynamically updated via settings
     link: '/',
     buttonText: 'Learn More',
   },

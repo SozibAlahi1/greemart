@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Header from './Header';
+import { useSettings } from '@/lib/useSettings';
 
 export default function ConditionalLayout({
   children,
@@ -9,6 +10,7 @@ export default function ConditionalLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { settings } = useSettings();
   const isAdminRoute = pathname?.startsWith('/admin');
 
   // Don't show header and footer for admin routes
@@ -27,9 +29,11 @@ export default function ConditionalLayout({
         <div className="container mx-auto px-4 py-12 max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">🛒 Fresh Groceries</h3>
+              <h3 className="text-xl font-bold mb-4">{settings.siteLogo ? (
+                <img src={settings.siteLogo} alt={settings.siteName} className="h-8 inline-block mr-2" />
+              ) : '🛒'} {settings.siteName}</h3>
               <p className="text-gray-400 text-sm">
-                Your trusted online grocery store. Fresh products delivered to your door.
+                {settings.siteDescription}
               </p>
             </div>
             <div>
@@ -53,14 +57,38 @@ export default function ConditionalLayout({
             <div>
               <h4 className="font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li>📞 1-800-FRESH</li>
-                <li>✉️ support@freshgroceries.com</li>
-                <li>📍 123 Fresh Street, City, State 12345</li>
+                <li>📞 {settings.contactPhone}</li>
+                <li>✉️ {settings.contactEmail}</li>
+                <li>📍 {settings.contactAddress}</li>
               </ul>
+              {(settings.facebookUrl || settings.twitterUrl || settings.instagramUrl || settings.youtubeUrl) && (
+                <div className="mt-4 flex gap-4">
+                  {settings.facebookUrl && (
+                    <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
+                      Facebook
+                    </a>
+                  )}
+                  {settings.twitterUrl && (
+                    <a href={settings.twitterUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
+                      Twitter
+                    </a>
+                  )}
+                  {settings.instagramUrl && (
+                    <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
+                      Instagram
+                    </a>
+                  )}
+                  {settings.youtubeUrl && (
+                    <a href={settings.youtubeUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
+                      YouTube
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 Fresh Groceries. All rights reserved. Built with Next.js 16</p>
+            <p>&copy; {new Date().getFullYear()} {settings.siteName}. All rights reserved. Built with Next.js 16</p>
           </div>
         </div>
       </footer>

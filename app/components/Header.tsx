@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from './theme-toggle';
 import { getSessionId } from '@/lib/session';
+import { useSettings } from '@/lib/useSettings';
 import {
   Sheet,
   SheetContent,
@@ -41,6 +42,7 @@ interface CartItem {
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
+  const { settings } = useSettings();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -154,11 +156,11 @@ export default function Header() {
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5">
                   <Phone className="h-4 w-4" />
-                  <span>1-800-FRESH</span>
+                  <span>{settings.contactPhone}</span>
                 </span>
                 <span className="hidden md:flex items-center gap-1.5">
                   <Truck className="h-4 w-4" />
-                  <span>Free delivery on orders over ৳50</span>
+                  <span>Free delivery on orders over {settings.currencySymbol}{settings.freeDeliveryThreshold}</span>
                 </span>
               </div>
               <div className="hidden md:flex items-center gap-4">
@@ -175,14 +177,22 @@ export default function Header() {
           <div className="flex items-center justify-between py-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="text-3xl group-hover:scale-110 transition-transform">
-                <ShoppingCart className="h-8 w-8 text-primary" />
-              </div>
+              {settings.siteLogo ? (
+                <img 
+                  src={settings.siteLogo} 
+                  alt={settings.siteName} 
+                  className="h-10 w-auto group-hover:scale-110 transition-transform"
+                />
+              ) : (
+                <div className="text-3xl group-hover:scale-110 transition-transform">
+                  <ShoppingCart className="h-8 w-8 text-primary" />
+                </div>
+              )}
               <div>
                 <div className="text-2xl font-bold text-foreground group-hover:text-primary transition">
-                  Fresh Groceries
+                  {settings.siteName}
                 </div>
-                <div className="text-xs text-muted-foreground">Your Fresh Market</div>
+                <div className="text-xs text-muted-foreground">{settings.siteDescription}</div>
               </div>
             </Link>
 
@@ -273,7 +283,7 @@ export default function Header() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <h3 className="font-semibold text-sm truncate">{item.name}</h3>
-                                <p className="text-primary font-semibold text-sm">৳{item.price.toFixed(2)}</p>
+                                <p className="text-primary font-semibold text-sm">{settings.currencySymbol}{item.price.toFixed(2)}</p>
                               <div className="flex items-center gap-2 mt-2">
                                 <Button
                                   variant="outline"
@@ -312,7 +322,7 @@ export default function Header() {
                       <div className="border-t pt-4 space-y-4">
                         <div className="flex justify-between items-center text-xl font-bold">
                           <span>Total:</span>
-                          <span className="text-primary">৳{total.toFixed(2)}</span>
+                          <span className="text-primary">{settings.currencySymbol}{total.toFixed(2)}</span>
                         </div>
                         <Button className="w-full" size="lg" asChild onClick={() => setIsCartOpen(false)}>
                           <Link href="/checkout">Proceed to Checkout</Link>

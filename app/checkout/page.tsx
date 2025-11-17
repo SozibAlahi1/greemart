@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { getSessionId } from '@/lib/session';
+import { useSettings } from '@/lib/useSettings';
 
 interface CartItem {
   productId: string;
@@ -18,6 +19,7 @@ interface CartItem {
 
 export default function Checkout() {
   const router = useRouter();
+  const { settings } = useSettings();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -56,8 +58,8 @@ export default function Checkout() {
     // Calculate order totals
     const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const subtotal = total;
-    const tax = subtotal * 0.08;
-    const shipping = 5.99;
+    const tax = subtotal * (settings.taxRate / 100);
+    const shipping = subtotal >= settings.freeDeliveryThreshold ? 0 : settings.deliveryFee;
     const finalTotal = subtotal + tax + shipping;
 
     // Generate order ID
@@ -104,8 +106,8 @@ export default function Checkout() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const subtotal = total;
-  const tax = subtotal * 0.08;
-  const shipping = 5.99;
+  const tax = subtotal * (settings.taxRate / 100);
+  const shipping = subtotal >= settings.freeDeliveryThreshold ? 0 : settings.deliveryFee;
   const finalTotal = subtotal + tax + shipping;
 
   if (loading) {
@@ -207,7 +209,7 @@ export default function Checkout() {
                         <h3 className="font-semibold truncate">{item.name}</h3>
                         <p className="text-muted-foreground text-sm">Quantity: {item.quantity}</p>
                       <p className="text-primary font-semibold mt-1">
-                        ৳{(item.price * item.quantity).toFixed(2)}
+                        {settings.currencySymbol}{(item.price * item.quantity).toFixed(2)}
                       </p>
                       </div>
                     </div>
@@ -217,19 +219,19 @@ export default function Checkout() {
               <div className="space-y-2 pt-4 border-t">
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Subtotal:</span>
-                          <span>৳{subtotal.toFixed(2)}</span>
+                          <span>{settings.currencySymbol}{subtotal.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Tax:</span>
-                          <span>৳{tax.toFixed(2)}</span>
+                          <span>{settings.currencySymbol}{tax.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Shipping:</span>
-                          <span>৳{shipping.toFixed(2)}</span>
+                          <span>{settings.currencySymbol}{shipping.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-xl font-bold pt-4 border-t">
                           <span>Total:</span>
-                          <span className="text-primary">৳{finalTotal.toFixed(2)}</span>
+                          <span className="text-primary">{settings.currencySymbol}{finalTotal.toFixed(2)}</span>
                         </div>
               </div>
             </CardContent>

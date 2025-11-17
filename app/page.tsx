@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import HomeContent from './components/HomeContent';
 import BannerCarousel from './components/BannerCarousel';
+import SettingsBanner from './components/SettingsBanner';
 
 export default function Home() {
   return (
@@ -9,6 +10,7 @@ export default function Home() {
         <div className="text-xl">Loading...</div>
       </div>
     }>
+      <SettingsBanner />
       <BannerCarousel />
       <HomeContent />
     </Suspense>

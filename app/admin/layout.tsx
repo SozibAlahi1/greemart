@@ -134,6 +134,11 @@ export default function AdminLayout({
       href: '/admin/orders',
       icon: ShoppingBag,
     },
+    {
+      title: 'Settings',
+      href: '/admin/settings',
+      icon: Settings,
+    },
   ];
 
   return (
