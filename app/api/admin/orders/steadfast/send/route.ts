@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Order from '@/models/Order';
+import Order, { IOrderItem } from '@/models/Order';
 import { getSteadfastCourier } from '@/lib/steadfast';
 
 /**
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare order data for Steadfast
     const itemDescription = order.items
-      .map(item => `${item.name} (Qty: ${item.quantity})`)
+      .map((item: IOrderItem) => `${item.name} (Qty: ${item.quantity})`)
       .join(', ');
 
     const steadfastOrder = {
