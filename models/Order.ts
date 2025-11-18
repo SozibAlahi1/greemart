@@ -21,6 +21,11 @@ export interface IOrder extends Document {
   total: number;
   status: string;
   orderDate: Date;
+  // Steadfast Courier fields
+  steadfastConsignmentId?: number;
+  steadfastTrackingCode?: string;
+  steadfastStatus?: string;
+  steadfastSentAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -67,6 +72,11 @@ const OrderSchema = new Schema<IOrder>(
     total: { type: Number, required: true },
     status: { type: String, default: 'pending' },
     orderDate: { type: Date, default: Date.now },
+    // Steadfast Courier fields
+    steadfastConsignmentId: { type: Number },
+    steadfastTrackingCode: { type: String },
+    steadfastStatus: { type: String },
+    steadfastSentAt: { type: Date },
   },
   {
     timestamps: true,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Settings, Save, Upload, Globe, Mail, Phone, MapPin, Share2, Truck, CreditCard, Image as ImageIcon, Search, Wrench } from 'lucide-react';
+import { Settings, Save, Upload, Globe, Mail, Phone, MapPin, Share2, Truck, CreditCard, Image as ImageIcon, Search, Wrench, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +38,8 @@ interface SettingsData {
   metaKeywords?: string;
   maintenanceMode: boolean;
   maintenanceMessage?: string;
+  steadfastApiKey?: string;
+  steadfastSecretKey?: string;
 }
 
 export default function SettingsPage() {
@@ -58,6 +60,8 @@ export default function SettingsPage() {
     taxRate: 5,
     bannerEnabled: false,
     maintenanceMode: false,
+    steadfastApiKey: '',
+    steadfastSecretKey: '',
   });
 
   useEffect(() => {
@@ -190,6 +194,10 @@ export default function SettingsPage() {
             <TabsTrigger value="maintenance">
               <Wrench className="h-4 w-4 mr-2" />
               Maintenance
+            </TabsTrigger>
+            <TabsTrigger value="steadfast">
+              <Package className="h-4 w-4 mr-2" />
+              Steadfast Courier
             </TabsTrigger>
           </TabsList>
 
@@ -606,6 +614,67 @@ export default function SettingsPage() {
                     />
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Steadfast Courier Settings */}
+          <TabsContent value="steadfast">
+            <Card>
+              <CardHeader>
+                <CardTitle>Steadfast Courier Integration</CardTitle>
+                <CardDescription>
+                  Configure your Steadfast Courier API credentials to enable order shipping
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Note:</strong> Contact Steadfast Courier Ltd. to obtain your API credentials. 
+                    These credentials are required to send orders and track deliveries.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="steadfastApiKey">
+                    <Package className="h-4 w-4 inline mr-2" />
+                    API Key
+                  </Label>
+                  <Input
+                    id="steadfastApiKey"
+                    type="password"
+                    value={settings.steadfastApiKey || ''}
+                    onChange={(e) => setSettings({ ...settings, steadfastApiKey: e.target.value })}
+                    placeholder="Enter your Steadfast API Key"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your unique API key provided by Steadfast Courier
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="steadfastSecretKey">
+                    <Package className="h-4 w-4 inline mr-2" />
+                    Secret Key
+                  </Label>
+                  <Input
+                    id="steadfastSecretKey"
+                    type="password"
+                    value={settings.steadfastSecretKey || ''}
+                    onChange={(e) => setSettings({ ...settings, steadfastSecretKey: e.target.value })}
+                    placeholder="Enter your Steadfast Secret Key"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your secret key for API authentication
+                  </p>
+                </div>
+
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    <strong>Security:</strong> Your API credentials are stored securely in the database. 
+                    Make sure to keep them confidential and never share them publicly.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

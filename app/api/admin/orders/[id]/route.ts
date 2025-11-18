@@ -104,7 +104,12 @@ export async function GET(
       shipping: orderPlain.shipping || 0,
       total: orderPlain.total || 0,
       orderDate: orderDateStr,
-      status: orderPlain.status || 'pending'
+      status: orderPlain.status || 'pending',
+      // Steadfast Courier fields
+      steadfastConsignmentId: orderPlain.steadfastConsignmentId,
+      steadfastTrackingCode: orderPlain.steadfastTrackingCode,
+      steadfastStatus: orderPlain.steadfastStatus,
+      steadfastSentAt: orderPlain.steadfastSentAt ? (orderPlain.steadfastSentAt instanceof Date ? orderPlain.steadfastSentAt.toISOString() : new Date(orderPlain.steadfastSentAt).toISOString()) : undefined,
     };
 
     console.log('Formatted order:', { 
@@ -193,7 +198,12 @@ export async function PATCH(
       shipping: order.shipping,
       total: order.total,
       orderDate: order.orderDate.toISOString(),
-      status: order.status
+      status: order.status,
+      // Steadfast Courier fields
+      steadfastConsignmentId: order.steadfastConsignmentId,
+      steadfastTrackingCode: order.steadfastTrackingCode,
+      steadfastStatus: order.steadfastStatus,
+      steadfastSentAt: order.steadfastSentAt ? order.steadfastSentAt.toISOString() : undefined,
     };
 
     return NextResponse.json(formattedOrder);

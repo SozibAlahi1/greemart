@@ -41,6 +41,10 @@ export interface ISettings extends Document {
   maintenanceMode: boolean;
   maintenanceMessage?: string;
   
+  // Steadfast Courier Settings
+  steadfastApiKey?: string;
+  steadfastSecretKey?: string;
+  
   // Internal field for singleton pattern
   _singleton?: boolean;
   
@@ -80,6 +84,10 @@ const SettingsSchema = new Schema<ISettings>(
     
     maintenanceMode: { type: Boolean, default: false },
     maintenanceMessage: { type: String },
+    
+    // Steadfast Courier Settings
+    steadfastApiKey: { type: String },
+    steadfastSecretKey: { type: String },
     
     // Singleton field to ensure only one settings document exists
     _singleton: { type: Boolean, default: true, unique: true },

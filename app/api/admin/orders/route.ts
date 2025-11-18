@@ -37,7 +37,12 @@ export async function GET(request: NextRequest) {
     shipping: order.shipping,
     total: order.total,
     orderDate: order.orderDate.toISOString(),
-    status: order.status
+    status: order.status,
+    // Steadfast Courier fields
+    steadfastConsignmentId: order.steadfastConsignmentId,
+    steadfastTrackingCode: order.steadfastTrackingCode,
+    steadfastStatus: order.steadfastStatus,
+    steadfastSentAt: order.steadfastSentAt ? order.steadfastSentAt.toISOString() : undefined,
   }));
 
   return NextResponse.json(formattedOrders);

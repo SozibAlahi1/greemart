@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingBag, Package, Eye, Edit, Save, X } from 'lucide-react';
+import { ShoppingBag, Package, Eye, Edit, Save, X, Truck, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,11 @@ interface Order {
   total: number;
   orderDate: string;
   status?: string;
+  // Steadfast Courier fields
+  steadfastConsignmentId?: number;
+  steadfastTrackingCode?: string;
+  steadfastStatus?: string;
+  steadfastSentAt?: string;
 }
 
 export default function AdminOrders() {
@@ -60,6 +65,8 @@ export default function AdminOrders() {
     status: '',
   });
   const [saving, setSaving] = useState(false);
+  const [sendingToSteadfast, setSendingToSteadfast] = useState<string | null>(null);
+  const [checkingStatus, setCheckingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -134,6 +141,70 @@ export default function AdminOrders() {
 
   const handleEditOrder = () => {
     setIsEditing(true);
+  };
+
+  const handleSendToSteadfast = async (orderId: string) => {
+    setSendingToSteadfast(orderId);
+    try {
+      const response = await fetch('/api/admin/orders/steadfast/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId, deliveryType: 0 }), // 0 = home delivery
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Order sent to Steadfast Courier successfully!\nTracking Code: ${data.consignment.trackingCode}\nConsignment ID: ${data.consignment.consignmentId}`);
+        fetchOrders(); // Refresh orders list
+        if (selectedOrder?.orderId === orderId) {
+          // Update selected order if it's the one being viewed
+          const updatedOrder = await fetch(`/api/admin/orders/${orderId}`).then(r => r.json());
+          setSelectedOrder(updatedOrder);
+        }
+      } else {
+        alert(`Failed to send order: ${data.message || data.error}`);
+      }
+    } catch (error: any) {
+      console.error('Error sending order to Steadfast:', error);
+      alert(`Error: ${error.message || 'Failed to send order to Steadfast Courier'}`);
+    } finally {
+      setSendingToSteadfast(null);
+    }
+  };
+
+  const handleCheckSteadfastStatus = async (orderId: string) => {
+    setCheckingStatus(orderId);
+    try {
+      const response = await fetch('/api/admin/orders/steadfast/status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Delivery Status: ${data.deliveryStatus}\nTracking Code: ${data.trackingCode || 'N/A'}`);
+        fetchOrders(); // Refresh orders list
+        if (selectedOrder?.orderId === orderId) {
+          // Update selected order if it's the one being viewed
+          const updatedOrder = await fetch(`/api/admin/orders/${orderId}`).then(r => r.json());
+          setSelectedOrder(updatedOrder);
+        }
+      } else {
+        alert(`Failed to check status: ${data.message || data.error}`);
+      }
+    } catch (error: any) {
+      console.error('Error checking Steadfast status:', error);
+      alert(`Error: ${error.message || 'Failed to check delivery status'}`);
+    } finally {
+      setCheckingStatus(null);
+    }
   };
 
   const handleSaveOrder = async () => {
@@ -245,6 +316,7 @@ export default function AdminOrders() {
                     <TableHead>Total</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Steadfast</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -278,20 +350,70 @@ export default function AdminOrders() {
                           {order.status || 'Pending'}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        {order.steadfastTrackingCode ? (
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="outline" className="text-xs">
+                              {order.steadfastTrackingCode}
+                            </Badge>
+                            {order.steadfastStatus && (
+                              <span className="text-xs text-muted-foreground">
+                                {order.steadfastStatus}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Not sent</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log('View button clicked for order:', order.orderId);
-                            handleViewOrder(order.orderId);
-                          }}
-                          type="button"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          {order.steadfastTrackingCode && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleCheckSteadfastStatus(order.orderId);
+                              }}
+                              disabled={checkingStatus === order.orderId}
+                              type="button"
+                              title="Check Steadfast Status"
+                            >
+                              <RefreshCw className={`h-4 w-4 ${checkingStatus === order.orderId ? 'animate-spin' : ''}`} />
+                            </Button>
+                          )}
+                          {!order.steadfastConsignmentId && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleSendToSteadfast(order.orderId);
+                              }}
+                              disabled={sendingToSteadfast === order.orderId}
+                              type="button"
+                              title="Send to Steadfast Courier"
+                            >
+                              <Truck className={`h-4 w-4 ${sendingToSteadfast === order.orderId ? 'animate-pulse' : ''}`} />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('View button clicked for order:', order.orderId);
+                              handleViewOrder(order.orderId);
+                            }}
+                            type="button"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -478,6 +600,44 @@ export default function AdminOrders() {
               <div className="text-sm text-muted-foreground">
                 <p>Order Date: {new Date(selectedOrder.orderDate).toLocaleString()}</p>
               </div>
+
+              {/* Steadfast Courier Information */}
+              {selectedOrder.steadfastConsignmentId || selectedOrder.steadfastTrackingCode ? (
+                <div className="space-y-4 border-t pt-4">
+                  <h3 className="font-semibold text-lg">Steadfast Courier</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedOrder.steadfastConsignmentId && (
+                      <div className="space-y-2">
+                        <Label>Consignment ID</Label>
+                        <p className="text-sm font-mono">{selectedOrder.steadfastConsignmentId}</p>
+                      </div>
+                    )}
+                    {selectedOrder.steadfastTrackingCode && (
+                      <div className="space-y-2">
+                        <Label>Tracking Code</Label>
+                        <p className="text-sm font-mono">{selectedOrder.steadfastTrackingCode}</p>
+                      </div>
+                    )}
+                    {selectedOrder.steadfastStatus && (
+                      <div className="space-y-2">
+                        <Label>Delivery Status</Label>
+                        <Badge variant="secondary">{selectedOrder.steadfastStatus}</Badge>
+                      </div>
+                    )}
+                    {selectedOrder.steadfastSentAt && (
+                      <div className="space-y-2">
+                        <Label>Sent At</Label>
+                        <p className="text-sm">{new Date(selectedOrder.steadfastSentAt).toLocaleString()}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 border-t pt-4">
+                  <h3 className="font-semibold text-lg">Steadfast Courier</h3>
+                  <p className="text-sm text-muted-foreground">This order has not been sent to Steadfast Courier yet.</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -499,13 +659,37 @@ export default function AdminOrders() {
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Close
-                </Button>
-                <Button onClick={handleEditOrder}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Order
-                </Button>
+                <div className="flex gap-2">
+                  {selectedOrder && !selectedOrder.steadfastConsignmentId && (
+                    <Button
+                      variant="outline"
+                      onClick={() => handleSendToSteadfast(selectedOrder.orderId)}
+                      disabled={sendingToSteadfast === selectedOrder.orderId}
+                    >
+                      <Truck className={`h-4 w-4 mr-2 ${sendingToSteadfast === selectedOrder.orderId ? 'animate-pulse' : ''}`} />
+                      {sendingToSteadfast === selectedOrder.orderId ? 'Sending...' : 'Send to Steadfast'}
+                    </Button>
+                  )}
+                  {selectedOrder && selectedOrder.steadfastTrackingCode && (
+                    <Button
+                      variant="outline"
+                      onClick={() => handleCheckSteadfastStatus(selectedOrder.orderId)}
+                      disabled={checkingStatus === selectedOrder.orderId}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${checkingStatus === selectedOrder.orderId ? 'animate-spin' : ''}`} />
+                      {checkingStatus === selectedOrder.orderId ? 'Checking...' : 'Check Status'}
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Close
+                  </Button>
+                  <Button onClick={handleEditOrder}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Order
+                  </Button>
+                </div>
               </>
             )}
           </DialogFooter>
