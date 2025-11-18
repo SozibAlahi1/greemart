@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import ProductCard from '@/app/components/ProductCard';
 import { useToast } from '@/app/components/Toast';
 import { getSessionId } from '@/lib/session';
+import ProductListSkeleton from '@/components/skeletons/ProductListSkeleton';
 
 interface Product {
   id: string;
@@ -113,9 +114,7 @@ function CategoryPageContent() {
   if (loading || isValidCategory === null) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-xl">Loading products...</div>
-        </div>
+        <ProductListSkeleton count={10} />
       </div>
     );
   }

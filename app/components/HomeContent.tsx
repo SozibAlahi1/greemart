@@ -7,6 +7,8 @@ import ProductCard from './ProductCard';
 import FlashSale from './FlashSale';
 import { useToast } from './Toast';
 import { getSessionId } from '@/lib/session';
+import ProductListSkeleton from '@/components/skeletons/ProductListSkeleton';
+import PageSkeleton from '@/components/skeletons/PageSkeleton';
 
 interface Product {
   id: string;
@@ -127,8 +129,8 @@ function HomeContentInner() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading products...</div>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <ProductListSkeleton count={10} />
       </div>
     );
   }
@@ -192,11 +194,7 @@ function HomeContentInner() {
 
 export default function HomeContent() {
   return (
-    <Suspense fallback={
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading...</div>
-      </div>
-    }>
+    <Suspense fallback={<PageSkeleton />}>
       <HomeContentInner />
     </Suspense>
   );

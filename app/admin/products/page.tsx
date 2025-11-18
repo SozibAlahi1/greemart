@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import TableSkeleton from '@/components/skeletons/TableSkeleton';
 
 interface Product {
   id: string;
@@ -70,8 +71,23 @@ export default function AdminProducts() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading products...</div>
+      <div>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Products</h1>
+            <p className="text-muted-foreground">
+              Manage your product inventory
+            </p>
+          </div>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>All Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TableSkeleton rows={8} columns={7} />
+          </CardContent>
+        </Card>
       </div>
     );
   }

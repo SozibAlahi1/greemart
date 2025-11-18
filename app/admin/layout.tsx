@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/app/components/theme-toggle';
+import PageSkeleton from '@/components/skeletons/PageSkeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -102,11 +103,7 @@ export default function AdminLayout({
 
   // Show loading state while checking auth
   if (loading || isAuthenticated === false) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   // Only render layout if authenticated

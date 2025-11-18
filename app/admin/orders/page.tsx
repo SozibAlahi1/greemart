@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import TableSkeleton from '@/components/skeletons/TableSkeleton';
 
 interface OrderItem {
   productId: string;
@@ -194,8 +195,21 @@ export default function AdminOrders() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading orders...</div>
+      <div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Orders</h1>
+          <p className="text-muted-foreground">
+            Manage customer orders
+          </p>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>All Orders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TableSkeleton rows={8} columns={8} />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -302,7 +316,10 @@ export default function AdminOrders() {
 
           {!selectedOrder ? (
             <div className="flex justify-center items-center py-8">
-              <p className="text-muted-foreground">Loading order details...</p>
+              <div className="space-y-4 w-full">
+                <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+                <div className="h-64 w-full bg-muted animate-pulse rounded" />
+              </div>
             </div>
           ) : (
             <div className="space-y-6">

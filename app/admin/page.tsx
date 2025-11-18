@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Package, ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
 
 interface Stats {
   totalProducts: number;
@@ -53,11 +54,7 @@ export default function AdminDashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading dashboard...</div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   const statCards = [

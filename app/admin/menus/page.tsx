@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/app/components/Toast';
+import PageSkeleton from '@/components/skeletons/PageSkeleton';
 
 interface MenuItem {
   _id?: string;
@@ -486,11 +487,7 @@ export default function AdminMenus() {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading menus...</div>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   const menuTree = selectedMenu ? buildMenuTree(selectedMenu.items) : [];

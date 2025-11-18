@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import ReviewSkeleton from '@/components/skeletons/ReviewSkeleton';
 
 interface Review {
   id: string;
@@ -162,7 +163,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
 
           {/* Reviews List */}
           {loading ? (
-            <div className="text-center py-8">Loading reviews...</div>
+            <ReviewSkeleton />
           ) : reviews.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">No reviews yet. Be the first to review!</p>

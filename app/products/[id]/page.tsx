@@ -12,6 +12,7 @@ import ReviewSection from '@/app/components/ReviewSection';
 import ProductCard from '@/app/components/ProductCard';
 import { useToast } from '@/app/components/Toast';
 import { getSessionId } from '@/lib/session';
+import ProductDetailSkeleton from '@/components/skeletons/ProductDetailSkeleton';
 
 interface Product {
   id: string;
@@ -111,11 +112,7 @@ export default function ProductPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading product...</div>
-      </div>
-    );
+    return <ProductDetailSkeleton />;
   }
 
   if (!product) {

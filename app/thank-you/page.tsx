@@ -7,6 +7,7 @@ import { CheckCircle2, Home, ShoppingBag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import PageSkeleton from '@/components/skeletons/PageSkeleton';
 
 interface OrderItem {
   productId: number;
@@ -51,11 +52,7 @@ function ThankYouContent() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   if (!orderInfo) {

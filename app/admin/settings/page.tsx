@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/app/components/Toast';
+import FormSkeleton from '@/components/skeletons/FormSkeleton';
 
 interface SettingsData {
   _id?: string;
@@ -140,11 +141,7 @@ export default function SettingsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading settings...</div>
-      </div>
-    );
+    return <FormSkeleton />;
   }
 
   return (

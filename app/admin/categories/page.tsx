@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import TableSkeleton from '@/components/skeletons/TableSkeleton';
 import {
   Dialog,
   DialogContent,
@@ -136,8 +137,23 @@ export default function AdminCategories() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading categories...</div>
+      <div>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Categories</h1>
+            <p className="text-muted-foreground">
+              Manage product categories
+            </p>
+          </div>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>All Categories</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TableSkeleton rows={8} columns={5} />
+          </CardContent>
+        </Card>
       </div>
     );
   }

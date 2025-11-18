@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { getSessionId } from '@/lib/session';
 import { useSettings } from '@/lib/useSettings';
+import PageSkeleton from '@/components/skeletons/PageSkeleton';
 
 interface CartItem {
   productId: string;
@@ -111,11 +112,7 @@ export default function Checkout() {
   const finalTotal = subtotal + tax + shipping;
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (
