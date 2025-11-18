@@ -14,7 +14,9 @@ import {
   Home,
   Plus,
   Minus,
-  Trash2
+  Trash2,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +41,18 @@ interface CartItem {
   image: string;
 }
 
+interface MenuItem {
+  _id: string;
+  label: string;
+  url: string;
+  type: 'link' | 'category' | 'page';
+  target?: string;
+  icon?: string;
+  order: number;
+  parentId?: string | null;
+  children?: MenuItem[];
+}
+
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
@@ -48,14 +62,66 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [mobileMenuItems, setMobileMenuItems] = useState<MenuItem[]>([]);
+  const [expandedMenuItems, setExpandedMenuItems] = useState<Set<string>>(new Set());
 
   // Helper function to generate category URL
   const getCategoryUrl = (category: string) => {
     return `/categories/${encodeURIComponent(category)}`;
   };
 
+  // Helper function to build menu URL
+  const getMenuUrl = (item: MenuItem): string => {
+    if (item.type === 'category') {
+      return getCategoryUrl(item.url);
+    }
+    return item.url;
+  };
+
+  // Build menu tree from flat items
+  const buildMenuTree = (items: MenuItem[]): MenuItem[] => {
+    const itemMap = new Map<string, MenuItem>();
+    const rootItems: MenuItem[] = [];
+
+    // First pass: create map of all items
+    items.forEach(item => {
+      itemMap.set(item._id, { ...item, children: [] });
+    });
+
+    // Second pass: build tree
+    items.forEach(item => {
+      const menuItem = itemMap.get(item._id)!;
+      if (item.parentId) {
+        const parent = itemMap.get(item.parentId);
+        if (parent) {
+          if (!parent.children) parent.children = [];
+          parent.children.push(menuItem);
+        } else {
+          rootItems.push(menuItem);
+        }
+      } else {
+        rootItems.push(menuItem);
+      }
+    });
+
+    // Sort by order
+    const sortItems = (items: MenuItem[]) => {
+      items.sort((a, b) => a.order - b.order);
+      items.forEach(item => {
+        if (item.children) {
+          sortItems(item.children);
+        }
+      });
+    };
+
+    sortItems(rootItems);
+    return rootItems;
+  };
+
   useEffect(() => {
     fetchCart();
+    fetchMenus();
     
     // Listen for cart update events
     const handleCartUpdate = () => {
@@ -68,6 +134,42 @@ export default function Header() {
       window.removeEventListener('cartUpdated', handleCartUpdate);
     };
   }, []);
+
+  const fetchMenus = async () => {
+    try {
+      // Fetch header menu
+      const headerResponse = await fetch('/api/menus?location=header');
+      if (headerResponse.ok) {
+        const headerMenus = await headerResponse.json();
+        if (headerMenus.length > 0) {
+          const headerMenu = headerMenus[0];
+          setMenuItems(buildMenuTree(headerMenu.items));
+        }
+      }
+
+      // Fetch mobile menu (or use header menu if no mobile menu exists)
+      const mobileResponse = await fetch('/api/menus?location=mobile');
+      if (mobileResponse.ok) {
+        const mobileMenus = await mobileResponse.json();
+        if (mobileMenus.length > 0) {
+          const mobileMenu = mobileMenus[0];
+          setMobileMenuItems(buildMenuTree(mobileMenu.items));
+        } else {
+          // Fallback to header menu if no mobile menu exists
+          const headerResponse = await fetch('/api/menus?location=header');
+          if (headerResponse.ok) {
+            const headerMenus = await headerResponse.json();
+            if (headerMenus.length > 0) {
+              const headerMenu = headerMenus[0];
+              setMobileMenuItems(buildMenuTree(headerMenu.items));
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching menus:', error);
+    }
+  };
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -369,103 +471,179 @@ export default function Header() {
 
           {/* Navigation Menu */}
           <nav className="hidden lg:flex items-center gap-6 pb-4 border-t border-border pt-4">
-            <Link href="/" className="text-foreground hover:text-primary font-medium transition flex items-center gap-2">
-              <Home className="h-4 w-4" />
-              <span>Home</span>
-            </Link>
-            <Link href={getCategoryUrl('Fruits & Vegetables')} className="text-foreground hover:text-primary font-medium transition">
-              Fruits & Vegetables
-            </Link>
-            <Link href={getCategoryUrl('Dairy & Eggs')} className="text-foreground hover:text-primary font-medium transition">
-              Dairy & Eggs
-            </Link>
-            <Link href={getCategoryUrl('Meat & Seafood')} className="text-foreground hover:text-primary font-medium transition">
-              Meat & Seafood
-            </Link>
-            <Link href={getCategoryUrl('Bakery')} className="text-foreground hover:text-primary font-medium transition">
-              Bakery
-            </Link>
-            <Link href={getCategoryUrl('Beverages')} className="text-foreground hover:text-primary font-medium transition">
-              Beverages
-            </Link>
-            <Link href="/about" className="text-foreground hover:text-primary font-medium transition">
-              About
-            </Link>
+            {menuItems.length > 0 ? (
+              menuItems.map((item) => {
+                const hasChildren = item.children && item.children.length > 0;
+                const isExpanded = expandedMenuItems.has(item._id);
+                
+                return (
+                  <div key={item._id} className="relative group">
+                    <Link
+                      href={getMenuUrl(item)}
+                      target={item.target || '_self'}
+                      className="text-foreground hover:text-primary font-medium transition flex items-center gap-1"
+                    >
+                      {item.label}
+                      {hasChildren && <ChevronDown className="h-4 w-4" />}
+                    </Link>
+                    {hasChildren && (
+                      <div className="absolute top-full left-0 mt-2 w-48 bg-popover border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                        <div className="py-2">
+                          {item.children?.map((child) => (
+                            <Link
+                              key={child._id}
+                              href={getMenuUrl(child)}
+                              target={child.target || '_self'}
+                              className="block px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition"
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              // Fallback to default menu if no menu is configured
+              <>
+                <Link href="/" className="text-foreground hover:text-primary font-medium transition flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  <span>Home</span>
+                </Link>
+                <Link href={getCategoryUrl('Fruits & Vegetables')} className="text-foreground hover:text-primary font-medium transition">
+                  Fruits & Vegetables
+                </Link>
+                <Link href={getCategoryUrl('Dairy & Eggs')} className="text-foreground hover:text-primary font-medium transition">
+                  Dairy & Eggs
+                </Link>
+                <Link href={getCategoryUrl('Meat & Seafood')} className="text-foreground hover:text-primary font-medium transition">
+                  Meat & Seafood
+                </Link>
+                <Link href={getCategoryUrl('Bakery')} className="text-foreground hover:text-primary font-medium transition">
+                  Bakery
+                </Link>
+                <Link href={getCategoryUrl('Beverages')} className="text-foreground hover:text-primary font-medium transition">
+                  Beverages
+                </Link>
+                <Link href="/about" className="text-foreground hover:text-primary font-medium transition">
+                  About
+                </Link>
+              </>
+            )}
           </nav>
 
           {/* Mobile Menu */}
           {isMobileMenuOpen && (
             <nav className="lg:hidden pb-4 border-t border-border pt-4 space-y-2">
-              <Link
-                href="/"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-foreground hover:text-primary font-medium transition"
-              >
-                Home
-              </Link>
-              <Link
-                href={getCategoryUrl('Fruits & Vegetables')}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-foreground hover:text-primary font-medium transition"
-              >
-                Fruits & Vegetables
-              </Link>
-              <Link
-                href={getCategoryUrl('Dairy & Eggs')}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-foreground hover:text-primary font-medium transition"
-              >
-                Dairy & Eggs
-              </Link>
-              <Link
-                href={getCategoryUrl('Meat & Seafood')}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-foreground hover:text-primary font-medium transition"
-              >
-                Meat & Seafood
-              </Link>
-              <Link
-                href={getCategoryUrl('Bakery')}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-foreground hover:text-primary font-medium transition"
-              >
-                Bakery
-              </Link>
-              <Link
-                href={getCategoryUrl('Beverages')}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-foreground hover:text-primary font-medium transition"
-              >
-                Beverages
-              </Link>
-              <Link
-                href={getCategoryUrl('Snacks')}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-foreground hover:text-primary font-medium transition"
-              >
-                Snacks
-              </Link>
-              <Link
-                href={getCategoryUrl('Frozen Foods')}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-foreground hover:text-primary font-medium transition"
-              >
-                Frozen Foods
-              </Link>
-              <Link
-                href={getCategoryUrl('Pantry Staples')}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-foreground hover:text-primary font-medium transition"
-              >
-                Pantry Staples
-              </Link>
-              <Link
-                href="/about"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-foreground hover:text-primary font-medium transition"
-              >
-                About
-              </Link>
+              {mobileMenuItems.length > 0 ? (
+                mobileMenuItems.map((item) => {
+                  const hasChildren = item.children && item.children.length > 0;
+                  const isExpanded = expandedMenuItems.has(item._id);
+                  
+                  return (
+                    <div key={item._id}>
+                      <div className="flex items-center justify-between">
+                        <Link
+                          href={getMenuUrl(item)}
+                          target={item.target || '_self'}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block py-2 text-foreground hover:text-primary font-medium transition flex-1"
+                        >
+                          {item.label}
+                        </Link>
+                        {hasChildren && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => {
+                              const newExpanded = new Set(expandedMenuItems);
+                              if (isExpanded) {
+                                newExpanded.delete(item._id);
+                              } else {
+                                newExpanded.add(item._id);
+                              }
+                              setExpandedMenuItems(newExpanded);
+                            }}
+                          >
+                            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          </Button>
+                        )}
+                      </div>
+                      {hasChildren && isExpanded && (
+                        <div className="pl-4 space-y-1">
+                          {item.children?.map((child) => (
+                            <Link
+                              key={child._id}
+                              href={getMenuUrl(child)}
+                              target={child.target || '_self'}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              className="block py-2 text-sm text-muted-foreground hover:text-primary font-medium transition"
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                // Fallback to default menu if no menu is configured
+                <>
+                  <Link
+                    href="/"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 text-foreground hover:text-primary font-medium transition"
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    href={getCategoryUrl('Fruits & Vegetables')}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 text-foreground hover:text-primary font-medium transition"
+                  >
+                    Fruits & Vegetables
+                  </Link>
+                  <Link
+                    href={getCategoryUrl('Dairy & Eggs')}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 text-foreground hover:text-primary font-medium transition"
+                  >
+                    Dairy & Eggs
+                  </Link>
+                  <Link
+                    href={getCategoryUrl('Meat & Seafood')}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 text-foreground hover:text-primary font-medium transition"
+                  >
+                    Meat & Seafood
+                  </Link>
+                  <Link
+                    href={getCategoryUrl('Bakery')}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 text-foreground hover:text-primary font-medium transition"
+                  >
+                    Bakery
+                  </Link>
+                  <Link
+                    href={getCategoryUrl('Beverages')}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 text-foreground hover:text-primary font-medium transition"
+                  >
+                    Beverages
+                  </Link>
+                  <Link
+                    href="/about"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 text-foreground hover:text-primary font-medium transition"
+                  >
+                    About
+                  </Link>
+                </>
+              )}
             </nav>
           )}
         </div>

@@ -15,7 +15,8 @@ import {
   Bell,
   Settings,
   User,
-  UserCircle
+  UserCircle,
+  List
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -133,6 +134,11 @@ export default function AdminLayout({
       title: 'Orders',
       href: '/admin/orders',
       icon: ShoppingBag,
+    },
+    {
+      title: 'Menus',
+      href: '/admin/menus',
+      icon: List,
     },
     {
       title: 'Settings',
