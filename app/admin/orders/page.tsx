@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingBag, Package, Eye, Edit, Save, X, Truck, RefreshCw, Shield, ShieldAlert } from 'lucide-react';
+import { ShoppingBag, Package, Eye, Edit, Save, X, Truck, RefreshCw, Shield, ShieldAlert, Plus, Search, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table';
 import TableSkeleton from '@/components/skeletons/TableSkeleton';
 import { useModules } from '@/lib/hooks/useModules';
+import { useToast } from '@/app/components/Toast';
 
 interface OrderItem {
   productId: string;
@@ -87,6 +88,7 @@ interface Order {
 
 export default function AdminOrders() {
   const { isModuleEnabled } = useModules();
+  const { showToast, ToastComponent } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -107,10 +109,41 @@ export default function AdminOrders() {
     result: Order['fraudCheckResult'];
   } | null>(null);
   const [isFraudResultDialogOpen, setIsFraudResultDialogOpen] = useState(false);
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  // Create order state
+  const [isCreateOrderDialogOpen, setIsCreateOrderDialogOpen] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [isProductSelectionOpen, setIsProductSelectionOpen] = useState(false);
+  const [createOrderForm, setCreateOrderForm] = useState({
+    customerName: '',
+    phone: '',
+    address: '',
+    status: 'pending',
+    items: [] as Array<{ productId: string; name: string; price: number; image: string; quantity: number }>,
+    subtotal: 0,
+    tax: 0,
+    shipping: 0,
+    total: 0,
+  });
+  const [creatingOrder, setCreatingOrder] = useState(false);
 
   useEffect(() => {
     fetchOrders();
+    fetchProducts();
   }, []);
+
+  // Filter orders based on search query
+  const filteredOrders = orders.filter((order) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      order.orderId.toLowerCase().includes(query) ||
+      order.customerName.toLowerCase().includes(query) ||
+      order.phone.includes(query) ||
+      (order.status || 'pending').toLowerCase().includes(query)
+    );
+  });
 
   // Debug: Log dialog state changes
   useEffect(() => {
@@ -129,6 +162,146 @@ export default function AdminOrders() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/products');
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const handleAddProductToOrder = (product: any) => {
+    const existingItemIndex = createOrderForm.items.findIndex(
+      (item) => item.productId === product.id
+    );
+
+    let updatedItems: typeof createOrderForm.items;
+    if (existingItemIndex >= 0) {
+      // Update quantity if product already exists
+      updatedItems = [...createOrderForm.items];
+      updatedItems[existingItemIndex].quantity += 1;
+    } else {
+      // Add new product
+      const newItem = {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: 1,
+      };
+      updatedItems = [...createOrderForm.items, newItem];
+    }
+    
+    setIsProductSelectionOpen(false);
+    calculateTotals(updatedItems);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    const updatedItems = createOrderForm.items.filter((_, i) => i !== index);
+    setCreateOrderForm({ ...createOrderForm, items: updatedItems });
+    calculateTotals(updatedItems);
+  };
+
+  const handleUpdateItemQuantity = (index: number, quantity: number) => {
+    if (quantity < 1) return;
+    const updatedItems = [...createOrderForm.items];
+    updatedItems[index].quantity = quantity;
+    setCreateOrderForm({ ...createOrderForm, items: updatedItems });
+    calculateTotals(updatedItems);
+  };
+
+  const calculateTotals = (items: typeof createOrderForm.items) => {
+    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const tax = subtotal * 0.05; // 5% tax
+    const shipping = subtotal > 500 ? 0 : 50; // Free shipping over 500, else 50
+    const total = subtotal + tax + shipping;
+
+    setCreateOrderForm((prev) => ({
+      ...prev,
+      items,
+      subtotal,
+      tax,
+      shipping,
+      total,
+    }));
+  };
+
+  const handleCreateOrder = async () => {
+    if (!createOrderForm.customerName || !createOrderForm.phone || !createOrderForm.address) {
+      showToast('Please fill in all customer information', 'error');
+      return;
+    }
+
+    if (createOrderForm.items.length === 0) {
+      showToast('Please add at least one item to the order', 'error');
+      return;
+    }
+
+    setCreatingOrder(true);
+    try {
+      const response = await fetch('/api/admin/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerName: createOrderForm.customerName,
+          phone: createOrderForm.phone,
+          address: createOrderForm.address,
+          items: createOrderForm.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+          })),
+          subtotal: createOrderForm.subtotal,
+          tax: createOrderForm.tax,
+          shipping: createOrderForm.shipping,
+          total: createOrderForm.total,
+          status: createOrderForm.status,
+          orderDate: new Date().toISOString(),
+        }),
+      });
+
+      if (response.ok) {
+        const newOrder = await response.json();
+        showToast(`Order created successfully! Order ID: ${newOrder.orderId}`, 'success');
+        setIsCreateOrderDialogOpen(false);
+        // Reset form
+        setCreateOrderForm({
+          customerName: '',
+          phone: '',
+          address: '',
+          status: 'pending',
+          items: [],
+          subtotal: 0,
+          tax: 0,
+          shipping: 0,
+          total: 0,
+        });
+        fetchOrders();
+      } else {
+        const error = await response.json();
+        showToast(`Failed to create order: ${error.error || 'Unknown error'}`, 'error');
+      }
+    } catch (error: any) {
+      console.error('Error creating order:', error);
+      showToast(`Error: ${error.message || 'Failed to create order'}`, 'error');
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
+
+  const handleOpenCreateOrder = () => {
+    setIsCreateOrderDialogOpen(true);
+    fetchProducts();
   };
 
   const handleViewOrder = async (orderId: string) => {
@@ -166,7 +339,7 @@ export default function AdminOrders() {
         }
         console.error('Failed to fetch order:', errorData);
         const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
-        alert(`Failed to load order: ${errorMessage}`);
+        showToast(`Failed to load order: ${errorMessage}`, 'error');
       }
     } catch (error: any) {
       console.error('Error fetching order:', error);
@@ -175,7 +348,7 @@ export default function AdminOrders() {
         stack: error.stack,
         name: error.name
       });
-      alert(`Error loading order: ${error.message || 'Unknown error'}. Please check the console for details.`);
+      showToast(`Error loading order: ${error.message || 'Unknown error'}`, 'error');
     }
   };
 
@@ -197,7 +370,7 @@ export default function AdminOrders() {
       const data = await response.json();
 
       if (response.ok) {
-        alert(`Order sent to Steadfast Courier successfully!\nTracking Code: ${data.consignment.trackingCode}\nConsignment ID: ${data.consignment.consignmentId}`);
+        showToast(`Order sent to Steadfast Courier successfully! Tracking Code: ${data.consignment.trackingCode}`, 'success');
         fetchOrders(); // Refresh orders list
         if (selectedOrder?.orderId === orderId) {
           // Update selected order if it's the one being viewed
@@ -205,11 +378,11 @@ export default function AdminOrders() {
           setSelectedOrder(updatedOrder);
         }
       } else {
-        alert(`Failed to send order: ${data.message || data.error}`);
+        showToast(`Failed to send order: ${data.message || data.error}`, 'error');
       }
     } catch (error: any) {
       console.error('Error sending order to Steadfast:', error);
-      alert(`Error: ${error.message || 'Failed to send order to Steadfast Courier'}`);
+      showToast(`Error: ${error.message || 'Failed to send order to Steadfast Courier'}`, 'error');
     } finally {
       setSendingToSteadfast(null);
     }
@@ -229,7 +402,7 @@ export default function AdminOrders() {
       const data = await response.json();
 
       if (response.ok) {
-        alert(`Delivery Status: ${data.deliveryStatus}\nTracking Code: ${data.trackingCode || 'N/A'}`);
+        showToast(`Delivery Status: ${data.deliveryStatus} | Tracking Code: ${data.trackingCode || 'N/A'}`, 'success');
         fetchOrders(); // Refresh orders list
         if (selectedOrder?.orderId === orderId) {
           // Update selected order if it's the one being viewed
@@ -237,11 +410,11 @@ export default function AdminOrders() {
           setSelectedOrder(updatedOrder);
         }
       } else {
-        alert(`Failed to check status: ${data.message || data.error}`);
+        showToast(`Failed to check status: ${data.message || data.error}`, 'error');
       }
     } catch (error: any) {
       console.error('Error checking Steadfast status:', error);
-      alert(`Error: ${error.message || 'Failed to check delivery status'}`);
+      showToast(`Error: ${error.message || 'Failed to check delivery status'}`, 'error');
     } finally {
       setCheckingStatus(null);
     }
@@ -275,11 +448,11 @@ export default function AdminOrders() {
           setSelectedOrder(updatedOrder);
         }
       } else {
-        alert(`Failed to check fraud: ${data.message || data.error || 'Unknown error'}`);
+        showToast(`Failed to check fraud: ${data.message || data.error || 'Unknown error'}`, 'error');
       }
     } catch (error: any) {
       console.error('Error checking fraud:', error);
-      alert(`Error: ${error.message || 'Failed to check fraud status'}`);
+      showToast(`Error: ${error.message || 'Failed to check fraud status'}`, 'error');
     } finally {
       setCheckingFraud(null);
     }
@@ -303,13 +476,13 @@ export default function AdminOrders() {
         setSelectedOrder(updated);
         setIsEditing(false);
         fetchOrders(); // Refresh orders list
-        alert('Order updated successfully!');
+        showToast('Order updated successfully!', 'success');
       } else {
-        alert('Failed to update order');
+        showToast('Failed to update order', 'error');
       }
     } catch (error) {
       console.error('Error updating order:', error);
-      alert('Error updating order');
+      showToast('Error updating order', 'error');
     } finally {
       setSaving(false);
     }
@@ -365,22 +538,49 @@ export default function AdminOrders() {
 
   return (
     <div>
+      {ToastComponent}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Orders</h1>
-        <p className="text-muted-foreground">
-          Manage customer orders
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Orders</h1>
+            <p className="text-muted-foreground">
+              Manage customer orders
+            </p>
+          </div>
+          <Button onClick={handleOpenCreateOrder}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Order
+          </Button>
+        </div>
       </div>
+
+      <Card className="mb-4">
+        <CardContent className="pt-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by order ID, customer name, phone, or status..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>All Orders ({orders.length})</CardTitle>
+          <CardTitle>
+            All Orders ({filteredOrders.length} {searchQuery ? `of ${orders.length}` : ''})
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {orders.length === 0 ? (
+          {filteredOrders.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No orders found</p>
+              <p className="text-muted-foreground">
+                {searchQuery ? 'No orders found matching your search' : 'No orders found'}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -400,7 +600,7 @@ export default function AdminOrders() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders.map((order) => (
+                  {filteredOrders.map((order) => (
                     <TableRow key={order.orderId}>
                       <TableCell className="font-mono text-sm">
                         {order.orderId}
@@ -1208,6 +1408,320 @@ export default function AdminOrders() {
 
           <DialogFooter>
             <Button onClick={() => setIsFraudResultDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Order Dialog */}
+      <Dialog open={isCreateOrderDialogOpen} onOpenChange={setIsCreateOrderDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Order</DialogTitle>
+            <DialogDescription>
+              Manually create a new order for a customer
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Customer Information */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Customer Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="create-customerName">Customer Name *</Label>
+                  <Input
+                    id="create-customerName"
+                    value={createOrderForm.customerName}
+                    onChange={(e) =>
+                      setCreateOrderForm({ ...createOrderForm, customerName: e.target.value })
+                    }
+                    placeholder="Enter customer name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-phone">Phone Number *</Label>
+                  <Input
+                    id="create-phone"
+                    value={createOrderForm.phone}
+                    onChange={(e) =>
+                      setCreateOrderForm({ ...createOrderForm, phone: e.target.value })
+                    }
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="create-address">Address *</Label>
+                  <Input
+                    id="create-address"
+                    value={createOrderForm.address}
+                    onChange={(e) =>
+                      setCreateOrderForm({ ...createOrderForm, address: e.target.value })
+                    }
+                    placeholder="Enter delivery address"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-status">Status</Label>
+                  <select
+                    id="create-status"
+                    value={createOrderForm.status}
+                    onChange={(e) =>
+                      setCreateOrderForm({ ...createOrderForm, status: e.target.value })
+                    }
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Add Products */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg">Order Products</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsProductSelectionOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Select Products
+                </Button>
+              </div>
+              {createOrderForm.items.length === 0 && (
+                <div className="text-center py-8 border border-dashed rounded-lg">
+                  <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-2">No products added yet</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsProductSelectionOpen(true)}
+                  >
+                    Add Products
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Order Items */}
+            {createOrderForm.items.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Order Items</h3>
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Quantity</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {createOrderForm.items.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 flex items-center justify-center bg-muted rounded overflow-hidden flex-shrink-0">
+                                {item.image && (item.image.startsWith('/') || item.image.startsWith('http')) ? (
+                                  <img
+                                    src={item.image}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-xl">{item.image}</span>
+                                )}
+                              </div>
+                              <span className="font-medium">{item.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>৳{item.price.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleUpdateItemQuantity(index, item.quantity - 1)}
+                              >
+                                -
+                              </Button>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  handleUpdateItemQuantity(index, parseInt(e.target.value) || 1)
+                                }
+                                className="w-20 text-center"
+                              />
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleUpdateItemQuantity(index, item.quantity + 1)}
+                              >
+                                +
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            ৳{(item.price * item.quantity).toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveItem(index)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {/* Order Summary */}
+            {createOrderForm.items.length > 0 && (
+              <div className="space-y-2 border-t pt-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span>৳{createOrderForm.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Tax (5%):</span>
+                  <span>৳{createOrderForm.tax.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Shipping:</span>
+                  <span>
+                    {createOrderForm.subtotal > 500 ? (
+                      <span className="text-green-600">Free</span>
+                    ) : (
+                      `৳${createOrderForm.shipping.toFixed(2)}`
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                  <span>Total:</span>
+                  <span className="text-primary">
+                    ৳{createOrderForm.total.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateOrderDialogOpen(false);
+                setCreateOrderForm({
+                  customerName: '',
+                  phone: '',
+                  address: '',
+                  status: 'pending',
+                  items: [],
+                  subtotal: 0,
+                  tax: 0,
+                  shipping: 0,
+                  total: 0,
+                });
+              }}
+              disabled={creatingOrder}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreateOrder} disabled={creatingOrder || createOrderForm.items.length === 0}>
+              {creatingOrder ? 'Creating...' : 'Create Order'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Product Selection Dialog */}
+      <Dialog open={isProductSelectionOpen} onOpenChange={setIsProductSelectionOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Select Products</DialogTitle>
+            <DialogDescription>
+              Choose products to add to the order
+            </DialogDescription>
+          </DialogHeader>
+
+          {products.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No products available</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 py-4">
+              {products.map((product) => {
+                const isAdded = createOrderForm.items.some(
+                  (item) => item.productId === product.id
+                );
+                const addedItem = createOrderForm.items.find(
+                  (item) => item.productId === product.id
+                );
+
+                return (
+                  <div
+                    key={product.id}
+                    className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
+                      isAdded ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => handleAddProductToOrder(product)}
+                  >
+                    <div className="aspect-square w-full mb-2 flex items-center justify-center bg-muted rounded overflow-hidden">
+                      {product.image && (product.image.startsWith('/') || product.image.startsWith('http')) ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-2xl">{product.image}</span>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium text-sm line-clamp-2">{product.name}</p>
+                      <p className="text-sm font-semibold text-primary">
+                        ৳{product.price.toFixed(2)}
+                      </p>
+                      {isAdded && addedItem && (
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-xs text-muted-foreground">
+                            Qty: {addedItem.quantity}
+                          </span>
+                          <Badge variant="secondary" className="text-xs">
+                            Added
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsProductSelectionOpen(false)}>
+              Done
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
