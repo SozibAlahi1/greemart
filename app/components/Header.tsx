@@ -321,12 +321,11 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="hidden md:flex flex-col h-auto py-2 gap-1"
+                className="hidden md:flex"
                 asChild
               >
                 <Link href="#">
                   <User className="h-5 w-5" />
-                  <span className="text-xs">Account</span>
                 </Link>
               </Button>
 
@@ -336,9 +335,8 @@ export default function Header() {
               {/* Cart Icon */}
               <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative h-auto py-2 gap-1 flex-col">
+                  <Button variant="ghost" size="icon" className="relative">
                     <ShoppingCart className="h-5 w-5" />
-                    <span className="text-xs">Cart</span>
                     {itemCount > 0 && (
                       <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-destructive">
                         {itemCount}

@@ -43,6 +43,15 @@ export async function GET(request: NextRequest) {
     steadfastTrackingCode: order.steadfastTrackingCode,
     steadfastStatus: order.steadfastStatus,
     steadfastSentAt: order.steadfastSentAt ? order.steadfastSentAt.toISOString() : undefined,
+    // Fraud Check fields
+    fraudChecked: order.fraudChecked || false,
+    fraudCheckResult: order.fraudCheckResult ? {
+      ...order.fraudCheckResult,
+      checkedAt: order.fraudCheckResult.checkedAt instanceof Date 
+        ? order.fraudCheckResult.checkedAt.toISOString() 
+        : order.fraudCheckResult.checkedAt,
+    } : undefined,
+    fraudCheckAt: order.fraudCheckAt ? order.fraudCheckAt.toISOString() : undefined,
   }));
 
   return NextResponse.json(formattedOrders);

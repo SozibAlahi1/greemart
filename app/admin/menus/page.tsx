@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Menu as MenuIcon, Plus, Edit, Trash2, ChevronDown, ChevronRight, GripVertical, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { ModuleGuard } from '@/components/modules/ModuleGuard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +48,14 @@ interface Menu {
 }
 
 export default function AdminMenus() {
+  return (
+    <ModuleGuard moduleId="menus">
+      <AdminMenusContent />
+    </ModuleGuard>
+  );
+}
+
+function AdminMenusContent() {
   const { showToast, ToastComponent } = useToast();
   const [menus, setMenus] = useState<Menu[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);

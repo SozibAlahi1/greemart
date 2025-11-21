@@ -16,12 +16,18 @@ import {
   Settings,
   User,
   UserCircle,
-  List
+  List,
+  Shield,
+  Puzzle,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/app/components/theme-toggle';
 import PageSkeleton from '@/components/skeletons/PageSkeleton';
+import { useSettings } from '@/lib/useSettings';
+import { useModules } from '@/lib/hooks/useModules';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,10 +44,16 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { settings } = useSettings();
+  const { isModuleEnabled } = useModules();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date>(new Date());
 
   const checkAuth = async () => {
     const token = localStorage.getItem('adminToken');
@@ -89,6 +101,72 @@ export default function AdminLayout({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  // Fetch pending orders count and notifications
+  const fetchPendingCount = async () => {
+    try {
+      const response = await fetch('/api/admin/orders/pending-count');
+      if (response.ok) {
+        const data = await response.json();
+        setPendingCount(data.count || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching pending count:', error);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const since = lastChecked.toISOString();
+      const response = await fetch(`/api/admin/orders/notifications?limit=10&since=${since}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.notifications && data.notifications.length > 0) {
+          setNotifications((prev) => {
+            // Merge new notifications, avoiding duplicates
+            const existingIds = new Set(prev.map((n: any) => n.orderId));
+            const newNotifications = data.notifications.filter(
+              (n: any) => !existingIds.has(n.orderId)
+            );
+            return [...newNotifications, ...prev].slice(0, 10);
+          });
+          // Show browser notification if not focused
+          if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification(`New Order: ${data.notifications[0].orderId}`, {
+              body: `${data.notifications[0].customerName} - ${data.notifications[0].phone}`,
+              icon: '/favicon.ico',
+            });
+          }
+        }
+        setLastChecked(new Date());
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  // Poll for pending orders and notifications
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // Initial fetch
+    fetchPendingCount();
+    fetchNotifications();
+
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // Poll every 5 seconds
+    const interval = setInterval(() => {
+      fetchPendingCount();
+      fetchNotifications();
+    }, 5000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
@@ -111,38 +189,68 @@ export default function AdminLayout({
     return null;
   }
 
-  const menuItems = [
+  const allMenuItems = [
     {
       title: 'Dashboard',
       href: '/admin',
       icon: LayoutDashboard,
+      moduleId: 'dashboard',
     },
     {
       title: 'Products',
       href: '/admin/products',
       icon: Package,
+      moduleId: 'products',
     },
     {
       title: 'Categories',
       href: '/admin/categories',
       icon: Tag,
+      moduleId: 'products', // Categories are part of products module
     },
     {
       title: 'Orders',
       href: '/admin/orders',
       icon: ShoppingBag,
+      moduleId: 'orders',
     },
     {
       title: 'Menus',
       href: '/admin/menus',
       icon: List,
+      moduleId: 'menus',
+    },
+    {
+      title: 'Fraud Check',
+      href: '/admin/fraud-check',
+      icon: Shield,
+      moduleId: 'fraud-check',
+    },
+    {
+      title: 'WhatsApp Marketing',
+      href: '/admin/whatsapp-marketing',
+      icon: MessageSquare,
+      moduleId: 'whatsapp-marketing',
+    },
+    {
+      title: 'Modules',
+      href: '/admin/modules',
+      icon: Puzzle,
+      moduleId: 'core', // Always visible
     },
     {
       title: 'Settings',
       href: '/admin/settings',
       icon: Settings,
+      moduleId: 'core', // Always visible
     },
   ];
+
+  // Filter menu items based on module status
+  const menuItems = allMenuItems.filter(item => {
+    if (item.moduleId === 'core') return true;
+    return isModuleEnabled(item.moduleId);
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -238,27 +346,99 @@ export default function AdminLayout({
             </Button>
             <div className="flex-1" />
             <div className="flex items-center gap-3">
-              {/* Notification Icon */}
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                title="Notifications"
-              >
-                <Link href="/admin/orders">
-                  <Bell className="h-5 w-5" />
-                </Link>
-              </Button>
+              {/* Notification Icon with Dropdown */}
+              <DropdownMenu open={notificationMenuOpen} onOpenChange={setNotificationMenuOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative"
+                    title="Notifications"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {pendingCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-destructive text-xs">
+                        {pendingCount > 99 ? '99+' : pendingCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <DropdownMenuLabel>
+                    <div className="flex items-center justify-between">
+                      <span>Notifications</span>
+                      {pendingCount > 0 && (
+                        <Badge variant="destructive" className="ml-2">
+                          {pendingCount} pending
+                        </Badge>
+                      )}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      No new notifications
+                    </div>
+                  ) : (
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.map((notification) => (
+                        <DropdownMenuItem
+                          key={notification.orderId}
+                          asChild
+                          className="flex flex-col items-start p-3 cursor-pointer"
+                        >
+                          <Link
+                            href="/admin/orders"
+                            onClick={() => setNotificationMenuOpen(false)}
+                            className="w-full"
+                          >
+                            <div className="flex items-center justify-between w-full mb-1">
+                              <span className="font-semibold text-sm">
+                                Order #{notification.orderId}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(notification.createdAt).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {notification.customerName} • {notification.phone}
+                            </div>
+                            <div className="text-xs font-medium mt-1">
+                              Total: {settings.currencySymbol}{notification.total?.toFixed(2) || '0.00'}
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/admin/orders"
+                      onClick={() => setNotificationMenuOpen(false)}
+                      className="text-center w-full"
+                    >
+                      View All Orders
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
               {/* Orders Icon */}
               <Button
                 variant="ghost"
                 size="icon"
+                className="relative"
                 asChild
                 title="Orders"
               >
                 <Link href="/admin/orders">
                   <ShoppingBag className="h-5 w-5" />
+                  {pendingCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-destructive text-xs">
+                      {pendingCount > 99 ? '99+' : pendingCount}
+                    </Badge>
+                  )}
                 </Link>
               </Button>
 

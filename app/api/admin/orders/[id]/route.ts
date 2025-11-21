@@ -110,6 +110,15 @@ export async function GET(
       steadfastTrackingCode: orderPlain.steadfastTrackingCode,
       steadfastStatus: orderPlain.steadfastStatus,
       steadfastSentAt: orderPlain.steadfastSentAt ? (orderPlain.steadfastSentAt instanceof Date ? orderPlain.steadfastSentAt.toISOString() : new Date(orderPlain.steadfastSentAt).toISOString()) : undefined,
+      // Fraud Check fields
+      fraudChecked: orderPlain.fraudChecked || false,
+      fraudCheckResult: orderPlain.fraudCheckResult ? {
+        ...orderPlain.fraudCheckResult,
+        checkedAt: orderPlain.fraudCheckResult.checkedAt instanceof Date 
+          ? orderPlain.fraudCheckResult.checkedAt.toISOString() 
+          : orderPlain.fraudCheckResult.checkedAt,
+      } : undefined,
+      fraudCheckAt: orderPlain.fraudCheckAt ? (orderPlain.fraudCheckAt instanceof Date ? orderPlain.fraudCheckAt.toISOString() : new Date(orderPlain.fraudCheckAt).toISOString()) : undefined,
     };
 
     console.log('Formatted order:', { 
@@ -204,6 +213,15 @@ export async function PATCH(
       steadfastTrackingCode: order.steadfastTrackingCode,
       steadfastStatus: order.steadfastStatus,
       steadfastSentAt: order.steadfastSentAt ? order.steadfastSentAt.toISOString() : undefined,
+      // Fraud Check fields
+      fraudChecked: order.fraudChecked || false,
+      fraudCheckResult: order.fraudCheckResult ? {
+        ...order.fraudCheckResult.toObject ? order.fraudCheckResult.toObject() : order.fraudCheckResult,
+        checkedAt: order.fraudCheckResult.checkedAt instanceof Date 
+          ? order.fraudCheckResult.checkedAt.toISOString() 
+          : order.fraudCheckResult.checkedAt,
+      } : undefined,
+      fraudCheckAt: order.fraudCheckAt ? order.fraudCheckAt.toISOString() : undefined,
     };
 
     return NextResponse.json(formattedOrder);

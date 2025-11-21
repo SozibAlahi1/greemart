@@ -16,9 +16,8 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className="h-auto py-2 flex-col gap-1">
+      <Button variant="ghost" size="icon">
         <Sun className="h-5 w-5" />
-        <span className="text-xs">Theme</span>
       </Button>
     );
   }
@@ -28,19 +27,12 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="h-auto py-2 flex-col gap-1"
       aria-label="Toggle theme"
     >
       {theme === 'dark' ? (
-        <>
-          <Sun className="h-5 w-5" />
-          <span className="text-xs">Light</span>
-        </>
+        <Sun className="h-5 w-5" />
       ) : (
-        <>
-          <Moon className="h-5 w-5" />
-          <span className="text-xs">Dark</span>
-        </>
+        <Moon className="h-5 w-5" />
       )}
     </Button>
   );

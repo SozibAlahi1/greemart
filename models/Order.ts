@@ -26,6 +26,37 @@ export interface IOrder extends Document {
   steadfastTrackingCode?: string;
   steadfastStatus?: string;
   steadfastSentAt?: Date;
+  // Fraud Check fields
+  fraudChecked?: boolean;
+  fraudCheckResult?: {
+    success: boolean;
+    totalOrders?: number;
+    successfulOrders?: number;
+    failedOrders?: number;
+    successRatio?: number;
+    fraudScore?: number;
+    riskLevel?: 'low' | 'medium' | 'high';
+    status?: string;
+    lastOrderDate?: string;
+    courierData?: {
+      [key: string]: {
+        name: string;
+        logo: string;
+        total_parcel: number;
+        success_parcel: number;
+        cancelled_parcel: number;
+        success_ratio: number;
+      };
+    };
+    summary?: {
+      total_parcel: number;
+      success_parcel: number;
+      cancelled_parcel: number;
+      success_ratio: number;
+    };
+    checkedAt: Date;
+  };
+  fraudCheckAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -77,6 +108,28 @@ const OrderSchema = new Schema<IOrder>(
     steadfastTrackingCode: { type: String },
     steadfastStatus: { type: String },
     steadfastSentAt: { type: Date },
+    // Fraud Check fields
+    fraudChecked: { type: Boolean, default: false },
+    fraudCheckResult: {
+      success: { type: Boolean },
+      totalOrders: { type: Number },
+      successfulOrders: { type: Number },
+      failedOrders: { type: Number },
+      successRatio: { type: Number },
+      fraudScore: { type: Number },
+      riskLevel: { type: String, enum: ['low', 'medium', 'high'] },
+      status: { type: String },
+      lastOrderDate: { type: String },
+      courierData: { type: Schema.Types.Mixed },
+      summary: {
+        total_parcel: { type: Number },
+        success_parcel: { type: Number },
+        cancelled_parcel: { type: Number },
+        success_ratio: { type: Number },
+      },
+      checkedAt: { type: Date, default: Date.now },
+    },
+    fraudCheckAt: { type: Date },
   },
   {
     timestamps: true,

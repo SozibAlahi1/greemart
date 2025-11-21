@@ -45,6 +45,14 @@ export interface ISettings extends Document {
   steadfastApiKey?: string;
   steadfastSecretKey?: string;
   
+  // Fraud Check Settings
+  fraudCheckApiKey?: string;
+  
+  // WhatsApp Marketing Settings
+  whatsappApiKey?: string;
+  whatsappApiUrl?: string;
+  whatsappPhoneNumberId?: string;
+  
   // Internal field for singleton pattern
   _singleton?: boolean;
   
@@ -88,6 +96,14 @@ const SettingsSchema = new Schema<ISettings>(
     // Steadfast Courier Settings
     steadfastApiKey: { type: String },
     steadfastSecretKey: { type: String },
+    
+    // Fraud Check Settings
+    fraudCheckApiKey: { type: String },
+    
+    // WhatsApp Marketing Settings
+    whatsappApiKey: { type: String },
+    whatsappApiUrl: { type: String },
+    whatsappPhoneNumberId: { type: String },
     
     // Singleton field to ensure only one settings document exists
     _singleton: { type: Boolean, default: true, unique: true },

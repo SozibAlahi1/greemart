@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Settings, Save, Upload, Globe, Mail, Phone, MapPin, Share2, Truck, CreditCard, Image as ImageIcon, Search, Wrench, Package } from 'lucide-react';
+import { Settings, Save, Upload, Globe, Mail, Phone, MapPin, Share2, Truck, CreditCard, Image as ImageIcon, Search, Wrench, Package, Shield, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,10 @@ interface SettingsData {
   maintenanceMessage?: string;
   steadfastApiKey?: string;
   steadfastSecretKey?: string;
+  fraudCheckApiKey?: string;
+  whatsappApiKey?: string;
+  whatsappApiUrl?: string;
+  whatsappPhoneNumberId?: string;
 }
 
 export default function SettingsPage() {
@@ -62,6 +66,10 @@ export default function SettingsPage() {
     maintenanceMode: false,
     steadfastApiKey: '',
     steadfastSecretKey: '',
+    fraudCheckApiKey: '',
+    whatsappApiKey: '',
+    whatsappApiUrl: '',
+    whatsappPhoneNumberId: '',
   });
 
   useEffect(() => {
@@ -198,6 +206,14 @@ export default function SettingsPage() {
             <TabsTrigger value="steadfast">
               <Package className="h-4 w-4 mr-2" />
               Steadfast Courier
+            </TabsTrigger>
+            <TabsTrigger value="whatsapp">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              WhatsApp Marketing
+            </TabsTrigger>
+            <TabsTrigger value="fraud">
+              <Shield className="h-4 w-4 mr-2" />
+              Fraud Check
             </TabsTrigger>
           </TabsList>
 
@@ -673,6 +689,134 @@ export default function SettingsPage() {
                   <p className="text-sm text-yellow-800 dark:text-yellow-200">
                     <strong>Security:</strong> Your API credentials are stored securely in the database. 
                     Make sure to keep them confidential and never share them publicly.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* WhatsApp Marketing Settings */}
+          <TabsContent value="whatsapp">
+            <Card>
+              <CardHeader>
+                <CardTitle>WhatsApp Marketing Integration</CardTitle>
+                <CardDescription>
+                  Configure your WhatsApp Business API credentials to enable marketing features
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Note:</strong> WhatsApp Marketing allows you to send direct messages, cart recovery, 
+                    order notifications, and broadcasts to increase sales and customer engagement.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="whatsappApiKey">
+                    <MessageSquare className="h-4 w-4 inline mr-2" />
+                    API Key / Access Token
+                  </Label>
+                  <Input
+                    id="whatsappApiKey"
+                    type="password"
+                    value={settings.whatsappApiKey || ''}
+                    onChange={(e) => setSettings({ ...settings, whatsappApiKey: e.target.value })}
+                    placeholder="Enter your WhatsApp API Access Token"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your WhatsApp Business API access token from Meta/Facebook
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="whatsappApiUrl">API URL (Optional)</Label>
+                  <Input
+                    id="whatsappApiUrl"
+                    type="text"
+                    value={settings.whatsappApiUrl || ''}
+                    onChange={(e) => setSettings({ ...settings, whatsappApiUrl: e.target.value })}
+                    placeholder="https://graph.facebook.com/v18.0"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Default: https://graph.facebook.com/v18.0
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="whatsappPhoneNumberId">Phone Number ID (Optional)</Label>
+                  <Input
+                    id="whatsappPhoneNumberId"
+                    type="text"
+                    value={settings.whatsappPhoneNumberId || ''}
+                    onChange={(e) => setSettings({ ...settings, whatsappPhoneNumberId: e.target.value })}
+                    placeholder="Enter your WhatsApp Phone Number ID"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your WhatsApp Business Phone Number ID from Meta Business Manager
+                  </p>
+                </div>
+
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    <strong>Security:</strong> Your API credentials are stored securely in the database. 
+                    Make sure to keep them confidential and never share them publicly.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Fraud Check Settings */}
+          <TabsContent value="fraud">
+            <Card>
+              <CardHeader>
+                <CardTitle>Fraud Check Integration</CardTitle>
+                <CardDescription>
+                  Configure your Fraud Check API credentials to enable order fraud detection
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Note:</strong> This service checks courier data via phone number to detect potential fraud. 
+                    It provides success ratio, total orders, and risk level for each phone number.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fraudCheckApiKey">
+                    <Shield className="h-4 w-4 inline mr-2" />
+                    API Key
+                  </Label>
+                  <Input
+                    id="fraudCheckApiKey"
+                    type="password"
+                    value={settings.fraudCheckApiKey || ''}
+                    onChange={(e) => setSettings({ ...settings, fraudCheckApiKey: e.target.value })}
+                    placeholder="Enter your Fraud Check API Key"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your Bearer token for API access (e.g., bdc_OxYzKFtO2YzaJx39AexxzipeHvHLedPeIbGeMbIlao0VPRaA8NUScPzzARaA)
+                  </p>
+                </div>
+
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    <strong>Security:</strong> Your API key is stored securely in the database. 
+                    Make sure to keep it confidential and never share it publicly.
+                  </p>
+                </div>
+
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <p className="text-sm text-green-800 dark:text-green-200">
+                    <strong>How it works:</strong> When you check an order for fraud, the system will:
+                    <ul className="list-disc list-inside mt-2 space-y-1">
+                      <li>Query the fraud check API with the customer's phone number</li>
+                      <li>Retrieve order history and success ratio</li>
+                      <li>Calculate risk level (Low, Medium, High) based on success ratio</li>
+                      <li>Display fraud score and order statistics</li>
+                    </ul>
                   </p>
                 </div>
               </CardContent>
