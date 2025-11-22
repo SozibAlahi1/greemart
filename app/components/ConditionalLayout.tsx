@@ -88,7 +88,11 @@ export default function ConditionalLayout({
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; {new Date().getFullYear()} {settings.siteName}. All rights reserved. Built with Next.js 16</p>
+            {settings.footerCopyright ? (
+              <p dangerouslySetInnerHTML={{ __html: settings.footerCopyright }} />
+            ) : (
+              <p>&copy; {new Date().getFullYear()} {settings.siteName}. All rights reserved. Built with Next.js 16</p>
+            )}
           </div>
         </div>
       </footer>

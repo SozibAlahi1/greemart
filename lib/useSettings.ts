@@ -28,6 +28,15 @@ export interface Settings {
   metaKeywords?: string;
   maintenanceMode: boolean;
   maintenanceMessage?: string;
+  homepageSlider?: Array<{
+    id: string;
+    image: string;
+    title?: string;
+    subtitle?: string;
+    link?: string;
+    buttonText?: string;
+  }>;
+  footerCopyright?: string;
 }
 
 const defaultSettings: Settings = {

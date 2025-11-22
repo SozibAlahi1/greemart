@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Settings, Save, Upload, Globe, Mail, Phone, MapPin, Share2, Truck, CreditCard, Image as ImageIcon, Search, Wrench, Package, Shield, MessageSquare } from 'lucide-react';
+import { Settings, Save, Upload, Globe, Mail, Phone, MapPin, Share2, Truck, CreditCard, Image as ImageIcon, Search, Wrench, Package, Shield, MessageSquare, Home, Plus, Trash2, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,15 @@ interface SettingsData {
   whatsappApiKey?: string;
   whatsappApiUrl?: string;
   whatsappPhoneNumberId?: string;
+  homepageSlider?: Array<{
+    id: string;
+    image: string;
+    title?: string;
+    subtitle?: string;
+    link?: string;
+    buttonText?: string;
+  }>;
+  footerCopyright?: string;
 }
 
 export default function SettingsPage() {
@@ -70,6 +79,8 @@ export default function SettingsPage() {
     whatsappApiKey: '',
     whatsappApiUrl: '',
     whatsappPhoneNumberId: '',
+    homepageSlider: [],
+    footerCopyright: '',
   });
 
   useEffect(() => {
@@ -173,52 +184,91 @@ export default function SettingsPage() {
           </Button>
         </div>
 
-        <Tabs defaultValue="general" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="general">
-              <Globe className="h-4 w-4 mr-2" />
-              General
+        <Tabs defaultValue="general" className="flex gap-6">
+          <TabsList className="flex flex-col h-auto w-64 bg-card border rounded-lg p-4 space-y-2">
+            <TabsTrigger 
+              value="general" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Globe className="h-5 w-5 mr-3" />
+              <span className="font-medium">General</span>
             </TabsTrigger>
-            <TabsTrigger value="contact">
-              <Mail className="h-4 w-4 mr-2" />
-              Contact
+            <TabsTrigger 
+              value="homepage" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Home className="h-5 w-5 mr-3" />
+              <span className="font-medium">Homepage</span>
             </TabsTrigger>
-            <TabsTrigger value="social">
-              <Share2 className="h-4 w-4 mr-2" />
-              Social Media
+            <TabsTrigger 
+              value="contact" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Mail className="h-5 w-5 mr-3" />
+              <span className="font-medium">Contact</span>
             </TabsTrigger>
-            <TabsTrigger value="delivery">
-              <Truck className="h-4 w-4 mr-2" />
-              Delivery
+            <TabsTrigger 
+              value="social" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Share2 className="h-5 w-5 mr-3" />
+              <span className="font-medium">Social Media</span>
             </TabsTrigger>
-            <TabsTrigger value="payment">
-              <CreditCard className="h-4 w-4 mr-2" />
-              Payment
+            <TabsTrigger 
+              value="delivery" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Truck className="h-5 w-5 mr-3" />
+              <span className="font-medium">Delivery</span>
             </TabsTrigger>
-            <TabsTrigger value="seo">
-              <Search className="h-4 w-4 mr-2" />
-              SEO
+            <TabsTrigger 
+              value="payment" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <CreditCard className="h-5 w-5 mr-3" />
+              <span className="font-medium">Payment</span>
             </TabsTrigger>
-            <TabsTrigger value="maintenance">
-              <Wrench className="h-4 w-4 mr-2" />
-              Maintenance
+            <TabsTrigger 
+              value="seo" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Search className="h-5 w-5 mr-3" />
+              <span className="font-medium">SEO</span>
             </TabsTrigger>
-            <TabsTrigger value="steadfast">
-              <Package className="h-4 w-4 mr-2" />
-              Steadfast Courier
+            <TabsTrigger 
+              value="maintenance" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Wrench className="h-5 w-5 mr-3" />
+              <span className="font-medium">Maintenance</span>
             </TabsTrigger>
-            <TabsTrigger value="whatsapp">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              WhatsApp Marketing
+            <TabsTrigger 
+              value="steadfast" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Package className="h-5 w-5 mr-3" />
+              <span className="font-medium">Steadfast Courier</span>
             </TabsTrigger>
-            <TabsTrigger value="fraud">
-              <Shield className="h-4 w-4 mr-2" />
-              Fraud Check
+            <TabsTrigger 
+              value="whatsapp" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <MessageSquare className="h-5 w-5 mr-3" />
+              <span className="font-medium">WhatsApp Marketing</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="fraud" 
+              className="w-full justify-start px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Shield className="h-5 w-5 mr-3" />
+              <span className="font-medium">Fraud Check</span>
             </TabsTrigger>
           </TabsList>
+          
+          <div className="flex-1">
 
-          {/* General Settings */}
-          <TabsContent value="general">
+            {/* General Settings */}
+            <TabsContent value="general" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>General Settings</CardTitle>
@@ -315,8 +365,161 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* Contact Settings */}
-          <TabsContent value="contact">
+            {/* Homepage Settings */}
+            <TabsContent value="homepage" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Homepage Slider</CardTitle>
+                  <CardDescription>
+                    Manage your homepage slider images and links
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    {(settings.homepageSlider || []).map((slide, index) => (
+                      <div key={slide.id} className="border rounded-lg p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold">Slide {index + 1}</h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const updated = [...(settings.homepageSlider || [])];
+                              updated.splice(index, 1);
+                              setSettings({ ...settings, homepageSlider: updated });
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Image URL</Label>
+                            <Input
+                              value={slide.image}
+                              onChange={(e) => {
+                                const updated = [...(settings.homepageSlider || [])];
+                                updated[index].image = e.target.value;
+                                setSettings({ ...settings, homepageSlider: updated });
+                              }}
+                              placeholder="https://example.com/image.jpg"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Link (optional)</Label>
+                            <Input
+                              value={slide.link || ''}
+                              onChange={(e) => {
+                                const updated = [...(settings.homepageSlider || [])];
+                                updated[index].link = e.target.value;
+                                setSettings({ ...settings, homepageSlider: updated });
+                              }}
+                              placeholder="/?category=Fruits"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Title (optional)</Label>
+                            <Input
+                              value={slide.title || ''}
+                              onChange={(e) => {
+                                const updated = [...(settings.homepageSlider || [])];
+                                updated[index].title = e.target.value;
+                                setSettings({ ...settings, homepageSlider: updated });
+                              }}
+                              placeholder="Fresh Organic Produce"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Subtitle (optional)</Label>
+                            <Input
+                              value={slide.subtitle || ''}
+                              onChange={(e) => {
+                                const updated = [...(settings.homepageSlider || [])];
+                                updated[index].subtitle = e.target.value;
+                                setSettings({ ...settings, homepageSlider: updated });
+                              }}
+                              placeholder="Get 20% off on all organic fruits"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Button Text (optional)</Label>
+                            <Input
+                              value={slide.buttonText || ''}
+                              onChange={(e) => {
+                                const updated = [...(settings.homepageSlider || [])];
+                                updated[index].buttonText = e.target.value;
+                                setSettings({ ...settings, homepageSlider: updated });
+                              }}
+                              placeholder="Shop Now"
+                            />
+                          </div>
+                        </div>
+                        {slide.image && (
+                          <div className="mt-4">
+                            <img
+                              src={slide.image}
+                              alt={`Slide ${index + 1}`}
+                              className="w-full h-48 object-cover rounded-lg border"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const newSlide = {
+                          id: Date.now().toString(),
+                          image: '',
+                          title: '',
+                          subtitle: '',
+                          link: '',
+                          buttonText: '',
+                        };
+                        setSettings({
+                          ...settings,
+                          homepageSlider: [...(settings.homepageSlider || []), newSlide],
+                        });
+                      }}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add New Slide
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Footer Copyright</CardTitle>
+                  <CardDescription>
+                    Customize the copyright text displayed in the footer
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="footerCopyright">Copyright Text</Label>
+                    <Textarea
+                      id="footerCopyright"
+                      value={settings.footerCopyright || ''}
+                      onChange={(e) => setSettings({ ...settings, footerCopyright: e.target.value })}
+                      placeholder={`&copy; ${new Date().getFullYear()} ${settings.siteName || 'Your Store'}. All rights reserved.`}
+                      rows={3}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Leave empty to use default copyright text. You can use HTML tags like &lt;strong&gt; for formatting.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Contact Settings */}
+            <TabsContent value="contact" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>Contact Information</CardTitle>
@@ -369,8 +572,8 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* Social Media */}
-          <TabsContent value="social">
+            {/* Social Media */}
+            <TabsContent value="social" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>Social Media Links</CardTitle>
@@ -426,8 +629,8 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* Delivery Settings */}
-          <TabsContent value="delivery">
+            {/* Delivery Settings */}
+            <TabsContent value="delivery" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>Delivery Settings</CardTitle>
@@ -476,8 +679,8 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* Payment Settings */}
-          <TabsContent value="payment">
+            {/* Payment Settings */}
+            <TabsContent value="payment" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>Payment Settings</CardTitle>
@@ -521,8 +724,8 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* SEO Settings */}
-          <TabsContent value="seo">
+            {/* SEO Settings */}
+            <TabsContent value="seo" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>SEO Settings</CardTitle>
@@ -594,8 +797,8 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* Maintenance Mode */}
-          <TabsContent value="maintenance">
+            {/* Maintenance Mode */}
+            <TabsContent value="maintenance" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>Maintenance Mode</CardTitle>
@@ -634,8 +837,8 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* Steadfast Courier Settings */}
-          <TabsContent value="steadfast">
+            {/* Steadfast Courier Settings */}
+            <TabsContent value="steadfast" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>Steadfast Courier Integration</CardTitle>
@@ -695,8 +898,8 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* WhatsApp Marketing Settings */}
-          <TabsContent value="whatsapp">
+            {/* WhatsApp Marketing Settings */}
+            <TabsContent value="whatsapp" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>WhatsApp Marketing Integration</CardTitle>
@@ -767,8 +970,8 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* Fraud Check Settings */}
-          <TabsContent value="fraud">
+            {/* Fraud Check Settings */}
+            <TabsContent value="fraud" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>Fraud Check Integration</CardTitle>
@@ -809,19 +1012,22 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                  <p className="text-sm text-green-800 dark:text-green-200">
-                    <strong>How it works:</strong> When you check an order for fraud, the system will:
+                  <div className="text-sm text-green-800 dark:text-green-200">
+                    <p className="mb-2">
+                      <strong>How it works:</strong> When you check an order for fraud, the system will:
+                    </p>
                     <ul className="list-disc list-inside mt-2 space-y-1">
                       <li>Query the fraud check API with the customer's phone number</li>
                       <li>Retrieve order history and success ratio</li>
                       <li>Calculate risk level (Low, Medium, High) based on success ratio</li>
                       <li>Display fraud score and order statistics</li>
                     </ul>
-                  </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+            </TabsContent>
+          </div>
         </Tabs>
       </div>
     </>

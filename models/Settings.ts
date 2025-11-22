@@ -32,6 +32,19 @@ export interface ISettings extends Document {
   bannerText?: string;
   bannerEnabled: boolean;
   
+  // Homepage Slider Settings
+  homepageSlider?: Array<{
+    id: string;
+    image: string;
+    title?: string;
+    subtitle?: string;
+    link?: string;
+    buttonText?: string;
+  }>;
+  
+  // Footer Settings
+  footerCopyright?: string;
+  
   // SEO Settings
   metaTitle?: string;
   metaDescription?: string;
@@ -85,6 +98,19 @@ const SettingsSchema = new Schema<ISettings>(
     
     bannerText: { type: String },
     bannerEnabled: { type: Boolean, default: false },
+    
+    // Homepage Slider Settings
+    homepageSlider: [{
+      id: { type: String, required: true },
+      image: { type: String, required: true },
+      title: { type: String },
+      subtitle: { type: String },
+      link: { type: String },
+      buttonText: { type: String },
+    }],
+    
+    // Footer Settings
+    footerCopyright: { type: String },
     
     metaTitle: { type: String },
     metaDescription: { type: String },

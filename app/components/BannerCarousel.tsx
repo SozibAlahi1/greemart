@@ -1,17 +1,39 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { banners, type Banner } from '../data/banners';
+import { useSettings } from '@/lib/useSettings';
 
 interface BannerCarouselProps {
   banners?: Banner[];
 }
 
 export default function BannerCarousel({ banners: customBanners }: BannerCarouselProps) {
-  const displayBanners = customBanners || banners;
+  const { settings } = useSettings();
+  
+  // Convert settings slider to Banner format, or use custom banners, or fall back to static banners
+  const displayBanners = useMemo(() => {
+    if (customBanners) return customBanners;
+    
+    if (settings.homepageSlider && settings.homepageSlider.length > 0) {
+      return settings.homepageSlider.map((slide, index) => {
+        const numericId = parseInt(slide.id);
+        return {
+          id: !isNaN(numericId) ? numericId : index + 1,
+          image: slide.image,
+          title: slide.title,
+          subtitle: slide.subtitle,
+          link: slide.link,
+          buttonText: slide.buttonText,
+        };
+      });
+    }
+    
+    return banners;
+  }, [customBanners, settings.homepageSlider]);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 20 });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
@@ -45,6 +67,11 @@ export default function BannerCarousel({ banners: customBanners }: BannerCarouse
       clearInterval(autoplay);
     };
   }, [emblaApi, onSelect]);
+
+  // Don't render if no banners
+  if (!displayBanners || displayBanners.length === 0) {
+    return null;
+  }
 
   return (
     <div className="relative w-full overflow-hidden py-4">
