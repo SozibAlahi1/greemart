@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from './theme-toggle';
 import { getSessionId } from '@/lib/session';
 import { useSettings } from '@/lib/useSettings';
+import HeaderSkeleton from '@/components/skeletons/HeaderSkeleton';
 import {
   Sheet,
   SheetContent,
@@ -56,7 +57,7 @@ interface MenuItem {
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const { settings } = useSettings();
+  const { settings, loading } = useSettings();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -247,6 +248,10 @@ export default function Header() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  if (loading) {
+    return <HeaderSkeleton />;
+  }
 
   return (
     <>

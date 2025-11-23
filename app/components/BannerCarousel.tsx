@@ -6,13 +6,14 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { banners, type Banner } from '../data/banners';
 import { useSettings } from '@/lib/useSettings';
+import SliderSkeleton from '@/components/skeletons/SliderSkeleton';
 
 interface BannerCarouselProps {
   banners?: Banner[];
 }
 
 export default function BannerCarousel({ banners: customBanners }: BannerCarouselProps) {
-  const { settings } = useSettings();
+  const { settings, loading } = useSettings();
   
   // Convert settings slider to Banner format, or use custom banners, or fall back to static banners
   const displayBanners = useMemo(() => {
@@ -67,6 +68,11 @@ export default function BannerCarousel({ banners: customBanners }: BannerCarouse
       clearInterval(autoplay);
     };
   }, [emblaApi, onSelect]);
+
+  // Show skeleton while loading
+  if (loading) {
+    return <SliderSkeleton />;
+  }
 
   // Don't render if no banners
   if (!displayBanners || displayBanners.length === 0) {
