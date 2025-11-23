@@ -19,7 +19,8 @@ import {
   List,
   Shield,
   Puzzle,
-  MessageSquare
+  MessageSquare,
+  Warehouse
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -231,6 +232,12 @@ export default function AdminLayout({
       href: '/admin/whatsapp-marketing',
       icon: MessageSquare,
       moduleId: 'whatsapp-marketing',
+    },
+    {
+      title: 'Stock Management',
+      href: '/admin/stock-management',
+      icon: Warehouse,
+      moduleId: 'stock-management',
     },
     {
       title: 'Modules',

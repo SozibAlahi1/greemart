@@ -8,6 +8,7 @@ export interface IProduct extends Document {
   image: string;
   category: string;
   inStock: boolean;
+  stockQuantity?: number; // Optional stock quantity for stock management
   rating: number;
   createdAt: Date;
   updatedAt: Date;
@@ -29,6 +30,7 @@ const ProductSchema = new Schema<IProduct>(
     image: { type: String, required: true },
     category: { type: String, required: true },
     inStock: { type: Boolean, default: true },
+    stockQuantity: { type: Number, default: 0 },
     rating: { type: Number, default: 4.0 },
   },
   {

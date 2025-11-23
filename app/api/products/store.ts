@@ -12,6 +12,7 @@ export interface Product {
   image: string;
   category: string;
   inStock: boolean;
+  stockQuantity?: number;
   rating: number;
 }
 
@@ -43,6 +44,7 @@ export async function getProducts(category?: string): Promise<Product[]> {
       image: p.image,
       category: p.category,
       inStock: p.inStock,
+      stockQuantity: p.stockQuantity,
       rating: p.rating
     }));
   } catch (error) {
@@ -66,6 +68,7 @@ export async function getProduct(id: string): Promise<Product | undefined> {
     image: product.image,
     category: product.category,
     inStock: product.inStock,
+    stockQuantity: product.stockQuantity,
     rating: product.rating
   };
 }
@@ -90,6 +93,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
     image: p.image,
     category: p.category,
     inStock: p.inStock,
+    stockQuantity: p.stockQuantity,
     rating: p.rating
   }));
 }
@@ -104,6 +108,7 @@ export async function addProduct(product: Omit<Product, 'id'>): Promise<Product>
     image: product.image,
     category: product.category,
     inStock: product.inStock,
+    stockQuantity: product.stockQuantity,
     rating: product.rating
   });
   
@@ -116,6 +121,7 @@ export async function addProduct(product: Omit<Product, 'id'>): Promise<Product>
     image: newProduct.image,
     category: newProduct.category,
     inStock: newProduct.inStock,
+    stockQuantity: newProduct.stockQuantity,
     rating: newProduct.rating
   };
 }
@@ -132,6 +138,7 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
       ...(updates.image && { image: updates.image }),
       ...(updates.category && { category: updates.category }),
       ...(updates.inStock !== undefined && { inStock: updates.inStock }),
+      ...(updates.stockQuantity !== undefined && { stockQuantity: updates.stockQuantity }),
       ...(updates.rating !== undefined && { rating: updates.rating })
     },
     { new: true }
@@ -148,6 +155,7 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
     image: updated.image,
     category: updated.category,
     inStock: updated.inStock,
+    stockQuantity: updated.stockQuantity,
     rating: updated.rating
   };
 }

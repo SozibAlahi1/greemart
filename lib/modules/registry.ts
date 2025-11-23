@@ -148,6 +148,15 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
       },
     ],
   },
+  'stock-management': {
+    id: 'stock-management',
+    name: 'Stock Management',
+    description: 'Track and manage product inventory levels, low stock alerts, and stock history',
+    version: '1.0.0',
+    category: 'premium',
+    price: 0, // Free but requires purchase
+    requiresPurchase: true,
+  },
 };
 
 /**
