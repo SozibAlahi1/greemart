@@ -66,6 +66,7 @@ export default function Header() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [mobileMenuItems, setMobileMenuItems] = useState<MenuItem[]>([]);
   const [expandedMenuItems, setExpandedMenuItems] = useState<Set<string>>(new Set());
+  const [menuLoading, setMenuLoading] = useState(true);
 
   // Helper function to generate category URL
   const getCategoryUrl = (category: string) => {
@@ -137,6 +138,7 @@ export default function Header() {
   }, []);
 
   const fetchMenus = async () => {
+    setMenuLoading(true);
     try {
       // Fetch header menu
       const headerResponse = await fetch('/api/menus?location=header');
@@ -169,6 +171,8 @@ export default function Header() {
       }
     } catch (error) {
       console.error('Error fetching menus:', error);
+    } finally {
+      setMenuLoading(false);
     }
   };
 
@@ -473,72 +477,74 @@ export default function Header() {
           </form>
 
           {/* Navigation Menu */}
-          <nav className="hidden lg:flex items-center gap-6 pb-4 border-t border-border pt-4">
-            {menuItems.length > 0 ? (
-              menuItems.map((item) => {
-                const hasChildren = item.children && item.children.length > 0;
-                const isExpanded = expandedMenuItems.has(item._id);
-                
-                return (
-                  <div key={item._id} className="relative group">
-                    <Link
-                      href={getMenuUrl(item)}
-                      target={item.target || '_self'}
-                      className="text-foreground hover:text-primary font-medium transition flex items-center gap-1"
-                    >
-                      {item.label}
-                      {hasChildren && <ChevronDown className="h-4 w-4" />}
-                    </Link>
-                    {hasChildren && (
-                      <div className="absolute top-full left-0 mt-2 w-48 bg-popover border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                        <div className="py-2">
-                          {item.children?.map((child) => (
-                            <Link
-                              key={child._id}
-                              href={getMenuUrl(child)}
-                              target={child.target || '_self'}
-                              className="block px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition"
-                            >
-                              {child.label}
-                            </Link>
-                          ))}
+          {!menuLoading && (
+            <nav className="hidden lg:flex items-center gap-6 pb-4 border-t border-border pt-4">
+              {menuItems.length > 0 ? (
+                menuItems.map((item) => {
+                  const hasChildren = item.children && item.children.length > 0;
+                  const isExpanded = expandedMenuItems.has(item._id);
+                  
+                  return (
+                    <div key={item._id} className="relative group">
+                      <Link
+                        href={getMenuUrl(item)}
+                        target={item.target || '_self'}
+                        className="text-foreground hover:text-primary font-medium transition flex items-center gap-1"
+                      >
+                        {item.label}
+                        {hasChildren && <ChevronDown className="h-4 w-4" />}
+                      </Link>
+                      {hasChildren && (
+                        <div className="absolute top-full left-0 mt-2 w-48 bg-popover border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                          <div className="py-2">
+                            {item.children?.map((child) => (
+                              <Link
+                                key={child._id}
+                                href={getMenuUrl(child)}
+                                target={child.target || '_self'}
+                                className="block px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition"
+                              >
+                                {child.label}
+                              </Link>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              // Fallback to default menu if no menu is configured
-              <>
-                <Link href="/" className="text-foreground hover:text-primary font-medium transition flex items-center gap-2">
-                  <Home className="h-4 w-4" />
-                  <span>Home</span>
-                </Link>
-                <Link href={getCategoryUrl('Fruits & Vegetables')} className="text-foreground hover:text-primary font-medium transition">
-                  Fruits & Vegetables
-                </Link>
-                <Link href={getCategoryUrl('Dairy & Eggs')} className="text-foreground hover:text-primary font-medium transition">
-                  Dairy & Eggs
-                </Link>
-                <Link href={getCategoryUrl('Meat & Seafood')} className="text-foreground hover:text-primary font-medium transition">
-                  Meat & Seafood
-                </Link>
-                <Link href={getCategoryUrl('Bakery')} className="text-foreground hover:text-primary font-medium transition">
-                  Bakery
-                </Link>
-                <Link href={getCategoryUrl('Beverages')} className="text-foreground hover:text-primary font-medium transition">
-                  Beverages
-                </Link>
-                <Link href="/about" className="text-foreground hover:text-primary font-medium transition">
-                  About
-                </Link>
-              </>
-            )}
-          </nav>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                // Fallback to default menu if no menu is configured
+                <>
+                  <Link href="/" className="text-foreground hover:text-primary font-medium transition flex items-center gap-2">
+                    <Home className="h-4 w-4" />
+                    <span>Home</span>
+                  </Link>
+                  <Link href={getCategoryUrl('Fruits & Vegetables')} className="text-foreground hover:text-primary font-medium transition">
+                    Fruits & Vegetables
+                  </Link>
+                  <Link href={getCategoryUrl('Dairy & Eggs')} className="text-foreground hover:text-primary font-medium transition">
+                    Dairy & Eggs
+                  </Link>
+                  <Link href={getCategoryUrl('Meat & Seafood')} className="text-foreground hover:text-primary font-medium transition">
+                    Meat & Seafood
+                  </Link>
+                  <Link href={getCategoryUrl('Bakery')} className="text-foreground hover:text-primary font-medium transition">
+                    Bakery
+                  </Link>
+                  <Link href={getCategoryUrl('Beverages')} className="text-foreground hover:text-primary font-medium transition">
+                    Beverages
+                  </Link>
+                  <Link href="/about" className="text-foreground hover:text-primary font-medium transition">
+                    About
+                  </Link>
+                </>
+              )}
+            </nav>
+          )}
 
           {/* Mobile Menu */}
-          {isMobileMenuOpen && (
+          {isMobileMenuOpen && !menuLoading && (
             <nav className="lg:hidden pb-4 border-t border-border pt-4 space-y-2">
               {mobileMenuItems.length > 0 ? (
                 mobileMenuItems.map((item) => {
