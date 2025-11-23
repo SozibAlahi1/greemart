@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { Phone, Mail, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import Header from './Header';
 import { useSettings } from '@/lib/useSettings';
 
@@ -57,32 +58,68 @@ export default function ConditionalLayout({
             <div>
               <h4 className="font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li>📞 {settings.contactPhone}</li>
-                <li>✉️ {settings.contactEmail}</li>
-                <li>📍 {settings.contactAddress}</li>
+                <li className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  <span>{settings.contactPhone}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  <span>{settings.contactEmail}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{settings.contactAddress}</span>
+                </li>
               </ul>
               {(settings.facebookUrl || settings.twitterUrl || settings.instagramUrl || settings.youtubeUrl) && (
-                <div className="mt-4 flex gap-4">
-                  {settings.facebookUrl && (
-                    <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
-                      Facebook
-                    </a>
-                  )}
-                  {settings.twitterUrl && (
-                    <a href={settings.twitterUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
-                      Twitter
-                    </a>
-                  )}
-                  {settings.instagramUrl && (
-                    <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
-                      Instagram
-                    </a>
-                  )}
-                  {settings.youtubeUrl && (
-                    <a href={settings.youtubeUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
-                      YouTube
-                    </a>
-                  )}
+                <div className="mt-4 flex items-center gap-3">
+                  <h5 className="text-sm font-semibold text-white">Follow Us</h5>
+                  <div className="flex gap-2">
+                    {settings.facebookUrl && (
+                      <a 
+                        href={settings.facebookUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-800 hover:bg-blue-600 text-gray-400 hover:text-white transition-all duration-300"
+                        aria-label="Facebook"
+                      >
+                        <Facebook className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                    {settings.twitterUrl && (
+                      <a 
+                        href={settings.twitterUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-800 hover:bg-blue-400 text-gray-400 hover:text-white transition-all duration-300"
+                        aria-label="Twitter"
+                      >
+                        <Twitter className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                    {settings.instagramUrl && (
+                      <a 
+                        href={settings.instagramUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-800 hover:bg-gradient-to-r hover:from-purple-500 hover:via-pink-500 hover:to-orange-500 text-gray-400 hover:text-white transition-all duration-300"
+                        aria-label="Instagram"
+                      >
+                        <Instagram className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                    {settings.youtubeUrl && (
+                      <a 
+                        href={settings.youtubeUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-800 hover:bg-red-600 text-gray-400 hover:text-white transition-all duration-300"
+                        aria-label="YouTube"
+                      >
+                        <Youtube className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
