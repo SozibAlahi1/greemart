@@ -10,6 +10,7 @@ import { useToast } from '@/app/components/Toast';
 import { getSessionId } from '@/lib/session';
 import ProductListSkeleton from '@/components/skeletons/ProductListSkeleton';
 import PageSkeleton from '@/components/skeletons/PageSkeleton';
+import { trackSearch, trackPageView, trackAddToCart } from '@/lib/clientTracking';
 
 interface Product {
   id: string;
@@ -34,6 +35,9 @@ function ProductsPageContent() {
   const { showToast, ToastComponent } = useToast();
 
   useEffect(() => {
+    // Track page view
+    trackPageView('/products');
+    
     // Read URL params
     const categoryParam = searchParams.get('category');
     const searchParam = searchParams.get('search');
@@ -108,6 +112,10 @@ function ProductsPageContent() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     filterProducts();
+    // Track search query
+    if (searchQuery.trim()) {
+      trackSearch(searchQuery, filteredProducts.length);
+    }
   };
 
   const addToCart = async (product: Product) => {
@@ -130,6 +138,7 @@ function ProductsPageContent() {
 
       if (response.ok) {
         showToast(`${product.name} added to cart!`, 'success');
+        trackAddToCart(product.id, product.name, 1, product.price);
         window.dispatchEvent(new CustomEvent('cartUpdated'));
       } else {
         showToast('Failed to add item to cart', 'error');

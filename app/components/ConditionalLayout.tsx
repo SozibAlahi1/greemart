@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { Phone, Mail, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import Header from './Header';
 import { useSettings } from '@/lib/useSettings';
+import PageViewTracker from './PageViewTracker';
 
 export default function ConditionalLayout({
   children,
@@ -22,6 +23,7 @@ export default function ConditionalLayout({
   // Show header and footer for frontend routes
   return (
     <>
+      <PageViewTracker />
       <Header />
       <main className="min-h-screen">
         {children}

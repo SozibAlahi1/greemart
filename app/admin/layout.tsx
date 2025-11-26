@@ -22,7 +22,8 @@ import {
   MessageSquare,
   Warehouse,
   FileText,
-  DollarSign
+  DollarSign,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -252,6 +253,12 @@ export default function AdminLayout({
       href: '/admin/income-expense',
       icon: DollarSign,
       moduleId: 'income-expense',
+    },
+    {
+      title: 'Tracking',
+      href: '/admin/tracking',
+      icon: BarChart3,
+      moduleId: 'core', // Always visible
     },
     {
       title: 'Modules',

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Order, { OrderLean, IOrderItem, OrderItemLean } from '@/models/Order';
 import mongoose from 'mongoose';
+import { trackPurchase } from '@/lib/tracking';
 
 // GET /api/admin/orders
 export async function GET(request: NextRequest) {
@@ -107,6 +108,36 @@ export async function POST(request: NextRequest) {
       orderDate: order.orderDate.toISOString(),
       status: order.status
     };
+
+    // Track purchase event
+    const userAgent = request.headers.get('user-agent') || undefined;
+    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+                      request.headers.get('x-real-ip') || 
+                      undefined;
+    
+    // Track purchase for each product in the order
+    for (const item of order.items) {
+      await trackPurchase(
+        order.orderId,
+        order.total,
+        {
+          sessionId: body.sessionId,
+          userId: body.userId,
+          productId: item.productId.toString(),
+          productName: item.name,
+          metadata: {
+            quantity: item.quantity,
+            itemPrice: item.price,
+            subtotal: order.subtotal,
+            tax: order.tax,
+            shipping: order.shipping,
+            totalItems: order.items.length,
+          },
+          userAgent,
+          ipAddress,
+        }
+      );
+    }
 
     return NextResponse.json(formattedOrder, { status: 201 });
   } catch (error) {
