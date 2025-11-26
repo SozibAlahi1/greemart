@@ -20,7 +20,9 @@ import {
   Shield,
   Puzzle,
   MessageSquare,
-  Warehouse
+  Warehouse,
+  FileText,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -238,6 +240,18 @@ export default function AdminLayout({
       href: '/admin/stock-management',
       icon: Warehouse,
       moduleId: 'stock-management',
+    },
+    {
+      title: 'Report Management',
+      href: '/admin/report-management',
+      icon: FileText,
+      moduleId: 'report-management',
+    },
+    {
+      title: 'Income Expense',
+      href: '/admin/income-expense',
+      icon: DollarSign,
+      moduleId: 'income-expense',
     },
     {
       title: 'Modules',

@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 'use client';
 
 import { useState, useEffect } from 'react';
+import { DEFAULT_THEME_COLOR } from '@/lib/constants/theme';
+import { createThemeCssVariables, sanitizeThemeColor } from '@/lib/themeColor';
 
 export interface Settings {
   _id?: string;
@@ -8,6 +11,7 @@ export interface Settings {
   siteDescription: string;
   siteLogo?: string;
   siteFavicon?: string;
+  themeColor?: string;
   contactEmail: string;
   contactPhone: string;
   contactAddress: string;
@@ -53,6 +57,7 @@ const defaultSettings: Settings = {
   taxRate: 5,
   bannerEnabled: false,
   maintenanceMode: false,
+  themeColor: DEFAULT_THEME_COLOR,
 };
 
 export function useSettings() {
@@ -61,25 +66,33 @@ export function useSettings() {
 
   useEffect(() => {
     fetchSettings();
-    
+
     // Listen for settings updates (when admin saves)
     const handleSettingsUpdate = () => {
       fetchSettings();
     };
-    
+
     window.addEventListener('settingsUpdated', handleSettingsUpdate);
-    
+
     return () => {
       window.removeEventListener('settingsUpdated', handleSettingsUpdate);
     };
   }, []);
+
+  useEffect(() => {
+    applyThemeColor(settings.themeColor);
+  }, [settings.themeColor]);
 
   const fetchSettings = async () => {
     try {
       const response = await fetch('/api/settings');
       if (response.ok) {
         const data = await response.json();
-        setSettings(data);
+        setSettings({
+          ...defaultSettings,
+          ...data,
+          themeColor: sanitizeThemeColor(data.themeColor),
+        });
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -91,3 +104,16 @@ export function useSettings() {
   return { settings, loading };
 }
 
+function applyThemeColor(color?: string) {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const cssVars = createThemeCssVariables(color);
+  const root = document.documentElement;
+  root.style.setProperty('--primary', cssVars.primary);
+  root.style.setProperty('--ring', cssVars.ring);
+  root.style.setProperty('--accent', cssVars.accent);
+  root.style.setProperty('--primary-foreground', cssVars.primaryForeground);
+  root.style.setProperty('--accent-foreground', cssVars.accentForeground);
+}

@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { DEFAULT_THEME_COLOR } from '@/lib/constants/theme';
 
 export interface ISettings extends Document {
   // Site Information
@@ -6,6 +7,7 @@ export interface ISettings extends Document {
   siteDescription: string;
   siteLogo?: string;
   siteFavicon?: string;
+  themeColor?: string;
   
   // Contact Information
   contactEmail: string;
@@ -78,6 +80,7 @@ const SettingsSchema = new Schema<ISettings>(
     siteDescription: { type: String, required: true, default: 'Your trusted online grocery store' },
     siteLogo: { type: String },
     siteFavicon: { type: String },
+    themeColor: { type: String, default: DEFAULT_THEME_COLOR },
     
     contactEmail: { type: String, required: true, default: 'contact@example.com' },
     contactPhone: { type: String, required: true, default: '+1234567890' },

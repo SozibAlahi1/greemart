@@ -157,6 +157,24 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     price: 0, // Free but requires purchase
     requiresPurchase: true,
   },
+  'report-management': {
+    id: 'report-management',
+    name: 'Report Management',
+    description: 'Generate comprehensive reports for sales, orders, products, revenue, and analytics with export capabilities',
+    version: '1.0.0',
+    category: 'analytics',
+    price: 0, // Free but requires purchase
+    requiresPurchase: true,
+  },
+  'income-expense': {
+    id: 'income-expense',
+    name: 'Income Expense',
+    description: 'Track and manage income and expense transactions with categories, reports, and financial analytics',
+    version: '1.0.0',
+    category: 'premium',
+    price: 0, // Free but requires purchase
+    requiresPurchase: true,
+  },
 };
 
 /**

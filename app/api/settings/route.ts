@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Settings, { SettingsLean } from '@/models/Settings';
+import { DEFAULT_THEME_COLOR } from '@/lib/constants/theme';
 
 // GET /api/settings - Public endpoint for frontend
 export async function GET(request: NextRequest) {
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
       deliveryTime: '2-3 days',
       bannerEnabled: false,
       maintenanceMode: false,
+      themeColor: DEFAULT_THEME_COLOR,
     });
   }
 }

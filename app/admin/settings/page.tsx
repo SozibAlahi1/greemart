@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/app/components/Toast';
 import FormSkeleton from '@/components/skeletons/FormSkeleton';
+import { DEFAULT_THEME_COLOR } from '@/lib/constants/theme';
 
 interface SettingsData {
   _id?: string;
@@ -18,6 +19,7 @@ interface SettingsData {
   siteDescription: string;
   siteLogo?: string;
   siteFavicon?: string;
+  themeColor?: string;
   contactEmail: string;
   contactPhone: string;
   contactAddress: string;
@@ -81,6 +83,7 @@ export default function SettingsPage() {
     whatsappPhoneNumberId: '',
     homepageSlider: [],
     footerCopyright: '',
+    themeColor: DEFAULT_THEME_COLOR,
   });
 
   useEffect(() => {
@@ -94,7 +97,10 @@ export default function SettingsPage() {
       if (response.ok) {
         const data = await response.json();
         console.log('Settings loaded:', data);
-        setSettings(data);
+        setSettings({
+          ...data,
+          themeColor: data.themeColor || DEFAULT_THEME_COLOR,
+        });
       } else {
         const error = await response.json();
         console.error('Failed to fetch settings:', error);
@@ -112,18 +118,25 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       console.log('Saving settings:', settings);
+      const payload = {
+        ...settings,
+        themeColor: settings.themeColor || DEFAULT_THEME_COLOR,
+      };
       const response = await fetch('/api/admin/settings', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
         const updatedData = await response.json();
         console.log('Settings saved successfully:', updatedData);
-        setSettings(updatedData); // Update with server response
+        setSettings({
+          ...updatedData,
+          themeColor: updatedData.themeColor || DEFAULT_THEME_COLOR,
+        }); // Update with server response
         // Notify frontend components to refresh settings
         window.dispatchEvent(new CustomEvent('settingsUpdated'));
         showToast('Settings saved successfully!', 'success');
@@ -166,6 +179,8 @@ export default function SettingsPage() {
   if (loading) {
     return <FormSkeleton />;
   }
+
+  const themeColorValue = settings.themeColor || DEFAULT_THEME_COLOR;
 
   return (
     <>
@@ -359,6 +374,32 @@ export default function SettingsPage() {
                         Upload Favicon
                       </Button>
                     </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="themeColor">Theme Color</Label>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Input
+                      id="themeColor"
+                      type="color"
+                      value={themeColorValue}
+                      onChange={(e) =>
+                        setSettings({ ...settings, themeColor: e.target.value })
+                      }
+                      className="h-12 w-24 cursor-pointer p-1"
+                    />
+                    <div>
+                      <p className="text-sm font-mono">{themeColorValue.toUpperCase()}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Controls primary buttons, highlights, and other accent elements across the site.
+                      </p>
+                    </div>
+                    <div
+                      className="h-10 w-10 rounded-full border shadow-sm"
+                      style={{ backgroundColor: themeColorValue }}
+                      aria-label="Theme color preview"
+                    />
                   </div>
                 </div>
               </CardContent>
